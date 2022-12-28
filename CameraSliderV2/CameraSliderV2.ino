@@ -105,6 +105,9 @@ const unsigned char logo [] PROGMEM = {
 #define maxObjDist 5000
 #define objInc 50
 #define minInterval 400                     //Minimum interval time between pulses in microseconds
+#define minCountDown 5                      //Define minimum, maximum, and increment for countdown variable 
+#define maxCountDown 120
+#define countDownInc 5
 
 static int pinA = 2;                        //Hardware interrupt digital pin 2
 static int pinB = 3;                        //Hardware interrupt digital pin 3
@@ -136,6 +139,7 @@ float objDist = initialObjDist;             //Distance of tracked object from sl
 int travelDir = 0;                          //Deifne initial travel and rotation directions
 int rotDir = 0;
 int rotAngle = 180;                         //Angle to rotate camera around axis
+int countDown = minCountDown;
 
 float pulsesPerMM = 50;                     //Number of motor pulses for 1mm travel
 float pulsesPerDeg = 4.4444;                //Number of motor pulses for 1 degree of rotation
@@ -456,7 +460,7 @@ void displayStart()
     }
   }
   pinMode(enablePin, OUTPUT);                               //Enable the motors
-  for(int i=3 ; i> 0 ; i--)                                 //Countdown to start
+  for(int i=countDown ; i> 0 ; i--)                         //Countdown to start
   {
     display.clearDisplay();                                 //Clear display
     display.setTextSize(2);                                 //Set the text size
@@ -524,6 +528,8 @@ void inputPanAndRotateData ()                                                   
   inputField (0, 0, 1, 1);
   dataInputNo = 4;                                                                //Input total duration
   inputField (initialDur, minDur, maxDur, durInc);
+  dataInputNo = 5;                                                                //Input count down
+  inputField (minCountDown, minCountDown, maxCountDown, countDownInc);
 }
 
 void inputTrackData ()                                                            //Input required data for object tracking mode
@@ -536,6 +542,8 @@ void inputTrackData ()                                                          
   inputField (initialObjDist, minObjDist, maxObjDist, objInc);
   dataInputNo = 3;                                                                //Input total duration
   inputField (initialDur, minDur, maxDur, durInc);
+  dataInputNo = 4;                                                                //Input count down
+  inputField (minCountDown, minCountDown, maxCountDown, countDownInc);
 }
 
 void updatePanAndRotateDataDisplay ()
@@ -552,6 +560,8 @@ void updatePanAndRotateDataDisplay ()
   display.print(F("Rot. Dir: "));
   display.setCursor(2,42);
   display.print(F("Duration: "));
+  display.setCursor(2,52);
+  display.print(F("Count Down: "));
   int selected = 0;
   if (dataInputNo == 0)                                     //Get the cursor position & update changing variable
   {
@@ -573,7 +583,7 @@ void updatePanAndRotateDataDisplay ()
     selected = 32;
     rotDir = encoderPos;
   }
-  else
+  else if (dataInputNo == 4)
   {
     selected = 42;
     travTime = encoderPos;
@@ -582,6 +592,11 @@ void updatePanAndRotateDataDisplay ()
       display.setCursor(40,55);                             //Set the display cursor position
       display.print(F("Too Fast"));                         //Set the display text
     }
+  }
+  else
+  {
+    selected = 52;
+    countDown = encoderPos;
   }
   display.setCursor(65,selected);                           //Set the display cursor position
   display.print(F(">"));
@@ -604,6 +619,9 @@ void updatePanAndRotateDataDisplay ()
   display.setCursor(75,42);
   display.print(travTime);
   display.print(F("s"));
+  display.setCursor(75,52);
+  display.print(countDown);
+  display.print(F("s"));
   display.display();                                        //Output the display text
 }
 
@@ -619,6 +637,8 @@ void updateTrackDataDisplay ()
   display.print(F("Obj. Dist: "));
   display.setCursor(2,40);
   display.print(F("Duration: "));
+  display.setCursor(2,50);
+  display.print(F("Count Down: "));
   int selected = 0;
   if (dataInputNo == 0)                                     //Get the cursor position & update changing variable
   {
@@ -635,7 +655,7 @@ void updateTrackDataDisplay ()
     selected = 30;
     objDist = encoderPos;
   }
-  else
+  else if (dataInputNo == 3)
   {
     selected = 40;
     travTime = encoderPos;
@@ -644,6 +664,11 @@ void updateTrackDataDisplay ()
       display.setCursor(40,55);                             //Set the display cursor position
       display.print(F("Too Fast"));                         //Set the display text
     }
+  }
+  else
+  {
+    selected = 50;
+    countDown = encoderPos;
   }
   display.setCursor(65,selected);                           //Set the display cursor position
   display.print(F(">"));
@@ -660,6 +685,9 @@ void updateTrackDataDisplay ()
   display.print(F("mm"));
   display.setCursor(75,40);
   display.print(travTime);
+  display.print(F("s"));
+  display.setCursor(75,50);
+  display.print(countDown);
   display.print(F("s"));
   display.display();                                        //Output the display text
 }
@@ -715,6 +743,7 @@ void resetVariables ()                                       //Reset variables b
   travelDir = 0;
   rotDir = 0;
   rotAngle = initialRotAng;
+  countDown = minCountDown;
 }
 
 int calcTravelPulses ()                                       //Calculates the number of pulses required to move a certain distance
