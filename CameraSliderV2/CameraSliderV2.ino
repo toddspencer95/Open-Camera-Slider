@@ -664,7 +664,6 @@ void updatePanAndRotateDataDisplay ()
   display.setCursor(75,52);
   display.print(countDown);
   display.print(F("s"));
-  display.display();
   display.setCursor(75,62);
   display.print(numLoops);
   display.display();                                        //Output the display text
@@ -674,35 +673,37 @@ void updateTrackDataDisplay ()
 {
   display.clearDisplay();                                   //Clear display
   display.setTextSize(1);                                   //Set the text size
-  display.setCursor(2,10);                                  //Set the display cursor position
+  display.setCursor(2,2);                                  //Set the display cursor position
   display.print(F("Distance: "));                           //Set the display text
-  display.setCursor(2,20);
+  display.setCursor(2,12);
   display.print(F("Trav. Dir: "));
-  display.setCursor(2,30);
+  display.setCursor(2,22);
   display.print(F("Obj. Dist: "));
-  display.setCursor(2,40);
+  display.setCursor(2,32);
   display.print(F("Duration: "));
-  display.setCursor(2,50);
+  display.setCursor(2,42);
   display.print(F("Count Down: "));
+  display.setCursor(2,52);
+  display.print(F("Num Loops: "));
   int selected = 0;
   if (dataInputNo == 0)                                     //Get the cursor position & update changing variable
   {
-    selected = 10;
+    selected = 2;
     travDist = encoderPos;
   }
   else if (dataInputNo == 1)
   {
-    selected = 20;
+    selected = 12;
     travelDir = encoderPos;
   }
   else if (dataInputNo == 2)
   {
-    selected = 30;
+    selected = 22;
     objDist = encoderPos;
   }
   else if (dataInputNo == 3)
   {
-    selected = 40;
+    selected = 32;
     travTime = encoderPos;
     //if(calcInterval (calcTravelPulses ()) < minInterval)    //Flags movement too fast
     //{
@@ -712,36 +713,36 @@ void updateTrackDataDisplay ()
   }
   else if (dataInputNo == 4)
   {
-    selected = 50;
+    selected = 42;
     countDown = encoderPos;
   }
   else
   {
-    selected = 60;
+    selected = 52;
     numLoops = encoderPos;
   }
   display.setCursor(65,selected);                           //Set the display cursor position
   display.print(F(">"));
-  display.setCursor(75,10);                                 //Display the field data
+  display.setCursor(75,2);                                 //Display the field data
   display.print(travDist);
   display.print(F("mm"));
-  display.setCursor(75,20);
+  display.setCursor(75,12);
   if (travelDir == 0)
     display.print(F("Forward"));
   else
     display.print(F("Reverse"));
-  display.setCursor(75,30);
+  display.setCursor(75,22);
   display.print(objDist);
   display.print(F("mm"));
-  display.setCursor(75,40);
+  display.setCursor(75,32);
   display.print(travTime);
   display.print(F("s"));
-  display.setCursor(75,50);
+  display.setCursor(75,42);
   display.print(countDown);
   display.print(F("s"));
-  display.display();
-  display.setCursor(75,60);
-  display.print(numLoops);                                        //Output the display text
+  display.setCursor(75,52);
+  display.print(numLoops);
+  display.display();                                        //Output the display text
 }
 
 void inputField (int initialSetting, int lowerLimit, int upperLimit, int increment)
