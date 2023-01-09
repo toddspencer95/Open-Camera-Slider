@@ -4,284 +4,277 @@
 //  - Updated Logo
 //  - Decreased max pan to avoid overruns
 //  - Max duration is 5 minutes and 30 seconds due to pulse width limitations
-//  - Made the mininum travel distance and rotation both 0, and got rid of the Pan Only 
-//    or Rotate Only options, user can just set either pan/rotate to null if they want to 
+//  - Made the mininum travel distance and rotation both 0, and got rid of the Pan Only
+//    or Rotate Only options, user can just set either pan/rotate to null if they want to
 //    just do one or the other
 
-#include <SPI.h>                            //Import libraries to control the OLED display
+#include <SPI.h>  //Import libraries to control the OLED display
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <math.h>
 
-#define SCREEN_WIDTH 128                    // OLED display width, in pixels
-#define SCREEN_HEIGHT 64                    // OLED display height, in pixels
+#define SCREEN_WIDTH 128  // OLED display width, in pixels
+#define SCREEN_HEIGHT 64  // OLED display height, in pixels
 
-#define OLED_RESET -1                                                           // Reset pin # (or -1 if sharing Arduino reset pin)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);       // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET -1                                                      // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);  // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 
 // 'Astronaut Logo', 128x64px
-const unsigned char logo [] PROGMEM = {
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x83, 0xe0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0xfc, 0x7f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x3f, 0xc0, 0x3f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x7c, 0x00, 0x1f, 0xfc, 0x0f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0xf8, 0x00, 0x0f, 0xfc, 0x0f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf9, 0xe0, 0x00, 0x0f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 0xe0, 0x00, 0x07, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x83, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x33, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x71, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x79, 0xe0, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0xf0, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0xf8, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0x7e, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x30, 0x1f, 0xfe, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfd, 0xfe, 0x31, 0x0f, 0xf8, 0x4f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x31, 0x80, 0x00, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf8, 0x7f, 0x31, 0xe0, 0x03, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf0, 0x3f, 0x39, 0xf0, 0x31, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf0, 0x3f, 0x39, 0xf8, 0x79, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x18, 0xfc, 0x19, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x18, 0x7f, 0x01, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x18, 0x3f, 0xc1, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x98, 0x1f, 0xf1, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0x87, 0xf9, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0xc1, 0xf8, 0xc3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0xf0, 0x70, 0x03, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x89, 0xfc, 0x00, 0x13, 0xc0, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc8, 0xff, 0x01, 0xf3, 0xc0, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x3f, 0xf9, 0xf3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x03, 0xf9, 0xf3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x01, 0xf9, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x01, 0xf9, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x00, 0x01, 0xf9, 0xf0, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x00, 0x01, 0xf9, 0xf0, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0x81, 0xc0, 0x01, 0xf9, 0xf3, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfe, 0x0f, 0x00, 0x01, 0xf9, 0xf1, 0xe0, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfc, 0x38, 0x00, 0x01, 0xf9, 0xf0, 0x38, 0x7f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf8, 0xe0, 0x00, 0x01, 0xf9, 0xf0, 0x0e, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf1, 0xc3, 0x80, 0x01, 0xf8, 0xe3, 0x87, 0x1f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf3, 0x8f, 0x80, 0x00, 0xf8, 0x03, 0xe3, 0x9f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf3, 0x9f, 0x00, 0x00, 0x70, 0x03, 0xf3, 0x9f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf3, 0x87, 0x00, 0x00, 0x00, 0x03, 0xc3, 0x9f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf3, 0xc1, 0x80, 0x00, 0x00, 0x02, 0x07, 0x9f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf1, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xf8, 0xfe, 0x00, 0x00, 0x00, 0x00, 0xfe, 0x3f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfc, 0x7f, 0xe0, 0x00, 0x00, 0x0f, 0xf8, 0x7f, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xfe, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x1f, 0xff, 0xff, 0xf0, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x80, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x00, 0x00, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x80, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+const unsigned char logo[] PROGMEM = {
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x83, 0xe0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0xfc, 0x7f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x3f, 0xc0, 0x3f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x7c, 0x00, 0x1f, 0xfc, 0x0f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0xf8, 0x00, 0x0f, 0xfc, 0x0f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf9, 0xe0, 0x00, 0x0f, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 0xe0, 0x00, 0x07, 0xff, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x83, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0x80, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x33, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x71, 0xc0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x79, 0xe0, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0xf0, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0xf8, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x78, 0x7e, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x30, 0x1f, 0xfe, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfd, 0xfe, 0x31, 0x0f, 0xf8, 0x4f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x31, 0x80, 0x00, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf8, 0x7f, 0x31, 0xe0, 0x03, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf0, 0x3f, 0x39, 0xf0, 0x31, 0xe7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf0, 0x3f, 0x39, 0xf8, 0x79, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x18, 0xfc, 0x19, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfc, 0xff, 0x18, 0x7f, 0x01, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x18, 0x3f, 0xc1, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x98, 0x1f, 0xf1, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0x87, 0xf9, 0xe3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0xc1, 0xf8, 0xc3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x99, 0xf0, 0x70, 0x03, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x89, 0xfc, 0x00, 0x13, 0xc0, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc8, 0xff, 0x01, 0xf3, 0xc0, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x3f, 0xf9, 0xf3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x03, 0xf9, 0xf3, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x01, 0xf9, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x01, 0xf9, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x00, 0x01, 0xf9, 0xf0, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x00, 0x01, 0xf9, 0xf0, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0x81, 0xc0, 0x01, 0xf9, 0xf3, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfe, 0x0f, 0x00, 0x01, 0xf9, 0xf1, 0xe0, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfc, 0x38, 0x00, 0x01, 0xf9, 0xf0, 0x38, 0x7f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf8, 0xe0, 0x00, 0x01, 0xf9, 0xf0, 0x0e, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf1, 0xc3, 0x80, 0x01, 0xf8, 0xe3, 0x87, 0x1f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf3, 0x8f, 0x80, 0x00, 0xf8, 0x03, 0xe3, 0x9f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf3, 0x9f, 0x00, 0x00, 0x70, 0x03, 0xf3, 0x9f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf3, 0x87, 0x00, 0x00, 0x00, 0x03, 0xc3, 0x9f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf3, 0xc1, 0x80, 0x00, 0x00, 0x02, 0x07, 0x9f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf1, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xf8, 0xfe, 0x00, 0x00, 0x00, 0x00, 0xfe, 0x3f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfc, 0x7f, 0xe0, 0x00, 0x00, 0x0f, 0xf8, 0x7f, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xfe, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xc0, 0x1f, 0xff, 0xff, 0xf0, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x80, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x00, 0x00, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x80, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
 
-#define minTravDist 0                       //Define travel distance initial setting, minimum, maximum and increment
-#define maxTravDist 450                     //Changed from 550mm to 450mm to avoid overruns
+#define minTravDist 0    //Define travel distance initial setting, minimum, maximum and increment
+#define maxTravDist 450  //Changed from 550mm to 450mm to avoid overruns
 #define travDistInc 25
-#define initialDur 120                      //Define duration initial setting, minimum, maximum and increment
+#define initialDur 120  //Define duration initial setting, minimum, maximum and increment
 #define minDur 10
-#define maxDur 330                          // Max allowable duration is 5min 30 seconds due to pulse size
+#define maxDur 330  // Max allowable duration is 5min 30 seconds due to pulse size
 #define durInc 5
-#define initialRotAng 180                   //Define rotation initial setting, minimum, maximum and increment
+#define initialRotAng 180  //Define rotation initial setting, minimum, maximum and increment
 #define minRotAng 0
 #define maxRotAng 360
 #define rotAngInc 10
-#define initialObjDist 200                  //Define object distance initial setting, minimum, maximum and increment
+#define initialObjDist 200  //Define object distance initial setting, minimum, maximum and increment
 #define minObjDist 150
 #define maxObjDist 5000
 #define objInc 50
-#define minInterval 400                     //Minimum interval time between pulses in microseconds
-#define minCountDown 5                      //Define minimum, maximum, and increment for countdown variable 
+#define minInterval 400  //Minimum interval time between pulses in microseconds
+#define minCountDown 5   //Define minimum, maximum, and increment for countdown variable
 #define maxCountDown 120
 #define countDownInc 5
-#define loopMin 1                           //Define minimum, maximum, and increment for looping feature
+#define loopMin 1  //Define minimum, maximum, and increment for looping feature
 #define loopMax 10
 #define loopInc 1
 
-static int pinA = 2;                        //Hardware interrupt digital pin 2
-static int pinB = 3;                        //Hardware interrupt digital pin 3
-volatile byte aFlag = 0;                    //Rising edge on pinA to signal that the encoder has arrived at a detent
-volatile byte bFlag = 0;                    //Rising edge on pinB to signal that the encoder has arrived at a detent (opposite direction to when aFlag is set)
-volatile int encoderPos = 0;                //Current value of encoder position, constained between limits below
-volatile int prevEncoderPos = 0;            //To track whether the encoder has been turned and the display needs to update
-volatile byte reading = 0;                  //Stores direct value from interrupt pin
-#define encButton 4                         //Define encoder pushbutton pin
-byte oldButtonState = HIGH;                 //First button state is open because of pull-up resistor
-const unsigned long debounceTime = 10;      //Debounce delay time
-unsigned long buttonPressTime;              //Time button has been pressed for debounce
+static int pinA = 2;                    //Hardware interrupt digital pin 2
+static int pinB = 3;                    //Hardware interrupt digital pin 3
+volatile byte aFlag = 0;                //Rising edge on pinA to signal that the encoder has arrived at a detent
+volatile byte bFlag = 0;                //Rising edge on pinB to signal that the encoder has arrived at a detent (opposite direction to when aFlag is set)
+volatile int encoderPos = 0;            //Current value of encoder position, constained between limits below
+volatile int prevEncoderPos = 0;        //To track whether the encoder has been turned and the display needs to update
+volatile byte reading = 0;              //Stores direct value from interrupt pin
+#define encButton 4                     //Define encoder pushbutton pin
+byte oldButtonState = HIGH;             //First button state is open because of pull-up resistor
+const unsigned long debounceTime = 10;  //Debounce delay time
+unsigned long buttonPressTime;          //Time button has been pressed for debounce
 
-int encLowLim = 0;                          //Variables to store the encoder limits and increment
+int encLowLim = 0;  //Variables to store the encoder limits and increment
 int encHighLim = 3;
 int encIncrement = 1;
 int dataInputNo = 0;
-int modeSelected = 0;                       //Current operating mode (Pan & Rotate, Track Object)
+int modeSelected = 0;  //Current operating mode (Pan & Rotate, Track Object)
 
-#define enablePin 5                         //Define motor enable pin
-#define travDirPin 6                        //Define travel & rotation stepper motor pins
+#define enablePin 5   //Define motor enable pin
+#define travDirPin 6  //Define travel & rotation stepper motor pins
 #define travStepPin 7
 #define rotDirPin 8
 #define rotStepPin 9
 
-float travDist = maxTravDist;               //Distance to travel across slider in millimeters
-float travTime = initialDur;                //Travel time to cover the required distance in seconds
-float objDist = initialObjDist;             //Distance of tracked object from slider in millimeters
-int travelDir = 0;                          //Define initial travel direction
-int rotDir = 0;                             //Define initial rotation direction
-int rotAngle = 180;                         //Angle to rotate camera around axis
+float travDist = maxTravDist;    //Distance to travel across slider in millimeters
+float travTime = initialDur;     //Travel time to cover the required distance in seconds
+float objDist = initialObjDist;  //Distance of tracked object from slider in millimeters
+int travelDir = 0;               //Define initial travel direction
+int rotDir = 0;                  //Define initial rotation direction
+int rotAngle = 180;              //Angle to rotate camera around axis
 int countDown = minCountDown;
-int numLoops  = loopMin;
+int numLoops = loopMin;
 
-float pulsesPerMM = 50;                     //Number of motor pulses for 1mm travel
-float pulsesPerDeg = 4.4444;                //Number of motor pulses for 1 degree of rotation
+float pulsesPerMM = 50;       //Number of motor pulses for 1mm travel
+float pulsesPerDeg = 4.4444;  //Number of motor pulses for 1 degree of rotation
 float currentDist = 0;
 float currentAngle = 0;
 
-void setup() 
-{
-  Serial.begin(9600);                                     //Start serial communication for debugging
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))          //Connect to the OLED display
+void setup() {
+  Serial.begin(9600);                              //Start serial communication for debugging
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))  //Connect to the OLED display
   {
-    Serial.println(F("SSD1306 allocation failed"));       //If connection fails
-    for(;;);                                              //Don't proceed, loop forever
+    Serial.println(F("SSD1306 allocation failed"));  //If connection fails
+    for (;;)
+      ;  //Don't proceed, loop forever
   }
-  pinMode(pinA, INPUT_PULLUP);                            //Set pinA as an input, pulled HIGH to the logic voltage
-  pinMode(pinB, INPUT_PULLUP);                            //Set pinB as an input, pulled HIGH to the logic voltage
-  attachInterrupt(0,PinA,RISING);                         //Set an interrupt on PinA
-  attachInterrupt(1,PinB,RISING);                         //Set an interrupt on PinB
-  pinMode (encButton, INPUT_PULLUP);                      //Set the encoder button as an input, pulled HIGH to the logic voltage
-  pinMode(enablePin, INPUT);                              //Open circuit enable pin, disables motors
-  pinMode(travDirPin, OUTPUT);                            //Define the travel stepper motor pins
+  pinMode(pinA, INPUT_PULLUP);       //Set pinA as an input, pulled HIGH to the logic voltage
+  pinMode(pinB, INPUT_PULLUP);       //Set pinB as an input, pulled HIGH to the logic voltage
+  attachInterrupt(0, PinA, RISING);  //Set an interrupt on PinA
+  attachInterrupt(1, PinB, RISING);  //Set an interrupt on PinB
+  pinMode(encButton, INPUT_PULLUP);  //Set the encoder button as an input, pulled HIGH to the logic voltage
+  pinMode(enablePin, INPUT);         //Open circuit enable pin, disables motors
+  pinMode(travDirPin, OUTPUT);       //Define the travel stepper motor pins
   pinMode(travStepPin, OUTPUT);
-  pinMode(rotDirPin, OUTPUT);                             //Define the rotation stepper motor pins
+  pinMode(rotDirPin, OUTPUT);  //Define the rotation stepper motor pins
   pinMode(rotStepPin, OUTPUT);
-  digitalWrite(travDirPin, HIGH);                         //Set the initial direction of motion for both motors
+  digitalWrite(travDirPin, HIGH);  //Set the initial direction of motion for both motors
   digitalWrite(rotDirPin, HIGH);
-  display.clearDisplay();                                 //Clear the display
-  display.setTextColor(SSD1306_WHITE);                    //Set the text colour to white
-  display.drawBitmap(0, 0, logo, 128, 64, WHITE);         //Display bitmap from array
+  display.clearDisplay();                          //Clear the display
+  display.setTextColor(SSD1306_WHITE);             //Set the text colour to white
+  display.drawBitmap(0, 0, logo, 128, 64, WHITE);  //Display bitmap from array
   display.display();
   delay(2000);
-  display.clearDisplay();                                 //Clear display
-  Serial.println("Setup complete");                       //Write to serial monitor to indicate the setup function is complete
+  display.clearDisplay();            //Clear display
+  Serial.println("Setup complete");  //Write to serial monitor to indicate the setup function is complete
 }
 
-void loop() 
-{  
-  encLowLim = 0;                                            //Mode selection menu, 4 modes
+void loop() {
+  encLowLim = 0;  //Mode selection menu, 4 modes
   encHighLim = 3;
   encIncrement = 1;
   updateMainMenu();
-  
-  boolean confirmed = false;                                //Both used to confirm button push to select mode
+
+  boolean confirmed = false;  //Both used to confirm button push to select mode
   boolean pressed = false;
-  encoderPos = 0;                                           //Encoder starts from 0, first menu option
-  while(!confirmed)                                         //While the user has not confirmed the selection
+  encoderPos = 0;     //Encoder starts from 0, first menu option
+  while (!confirmed)  //While the user has not confirmed the selection
   {
-    byte buttonState = digitalRead (encButton); 
-    if (buttonState != oldButtonState)
-    {
-      if (millis () - buttonPressTime >= debounceTime)      //Debounce button
+    byte buttonState = digitalRead(encButton);
+    if (buttonState != oldButtonState) {
+      if (millis() - buttonPressTime >= debounceTime)  //Debounce button
       {
-        buttonPressTime = millis ();                        //Time when button was pushed
-        oldButtonState =  buttonState;                      //Remember button state for next time
-        if (buttonState == LOW)
-        {
-          modeSelected = encoderPos;                        //If the button is pressed, accept the current digit into the guessed code
+        buttonPressTime = millis();    //Time when button was pushed
+        oldButtonState = buttonState;  //Remember button state for next time
+        if (buttonState == LOW) {
+          modeSelected = encoderPos;  //If the button is pressed, accept the current digit into the guessed code
           pressed = true;
           Serial.println("Button Pushed");
-        }
-        else 
-        {
-          if (pressed == true)                              //Confirm the input once the button is released again
+        } else {
+          if (pressed == true)  //Confirm the input once the button is released again
           {
             confirmed = true;
             Serial.println("Mode confirmed");
           }
-        }  
+        }
       }
     }
-    if(encoderPos!=prevEncoderPos)                          //Update the display if the encoder position has changed
+    if (encoderPos != prevEncoderPos)  //Update the display if the encoder position has changed
     {
       updateMainMenu();
-      prevEncoderPos=encoderPos;
+      prevEncoderPos = encoderPos;
     }
   }
   Serial.println("Mode selected");
-  if (modeSelected == 0)                                    //Run required mode function depending on selection
-    runPanAndRotate ();
+  if (modeSelected == 0)  //Run required mode function depending on selection
+    runPanAndRotate();
   else
-    runTrack ();
+    runTrack();
 }
 
-void PinA()                                             //Rotary encoder interrupt service routine for one encoder pin
+void PinA()  //Rotary encoder interrupt service routine for one encoder pin
 {
-  cli();                                                //Stop interrupts happening before we read pin values
-  reading = PIND & 0xC;                                 //Read all eight pin values then strip away all but pinA and pinB's values
-  if(reading == B00001100 && aFlag)                     //Check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
-  {     
-    if(encoderPos<=(encHighLim-encIncrement))
-      encoderPos = encoderPos+encIncrement;             //Increment the encoder's position count , only when below upper limit
-    else
-      encoderPos = encHighLim;                          //Stop at maximum, being upper limit
-    bFlag = 0;                                          //Reset flags for the next turn
-    aFlag = 0;                                          //Reset flags for the next turn
-  }
-  else if (reading == B00000100)                        //Signal that we're expecting pinB to signal the transition to detent from free rotation
-    bFlag = 1;
-  sei();                                                //Restart interrupts
-}
-
-void PinB()                                             //Rotary encoder interrupt service routine for the other encoder pin
-{
-  cli();                                                //Stop interrupts happening before we read pin values
-  reading = PIND & 0xC;                                 //Read all eight pin values then strip away all but pinA and pinB's values
-  if (reading == B00001100 && bFlag)                    //Check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
+  cli();                              //Stop interrupts happening before we read pin values
+  reading = PIND & 0xC;               //Read all eight pin values then strip away all but pinA and pinB's values
+  if (reading == B00001100 && aFlag)  //Check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
   {
-    if(encoderPos>=(encLowLim+encIncrement))
-      encoderPos = encoderPos-encIncrement;             //Decrement the encoder's position count, only when above lower limit
+    if (encoderPos <= (encHighLim - encIncrement))
+      encoderPos = encoderPos + encIncrement;  //Increment the encoder's position count , only when below upper limit
     else
-      encoderPos = encLowLim;                           //Stop at minimum, being lower limit
-    bFlag = 0;                                          //Reset flags for the next turn
-    aFlag = 0;                                          //Reset flags for the next turn
-  }
-  else if (reading == B00001000)                        //Signal that we're expecting pinA to signal the transition to detent from free rotation
-    aFlag = 1;
-  sei();                                                //Restart interrupts
+      encoderPos = encHighLim;      //Stop at maximum, being upper limit
+    bFlag = 0;                      //Reset flags for the next turn
+    aFlag = 0;                      //Reset flags for the next turn
+  } else if (reading == B00000100)  //Signal that we're expecting pinB to signal the transition to detent from free rotation
+    bFlag = 1;
+  sei();  //Restart interrupts
 }
 
-void updateMainMenu()                               //Updates the display data for the main menu
+void PinB()  //Rotary encoder interrupt service routine for the other encoder pin
 {
-  display.clearDisplay();                           //Clear display
-  display.setTextSize(1);                           //Set the text size
-  display.setCursor(28,4);
+  cli();                              //Stop interrupts happening before we read pin values
+  reading = PIND & 0xC;               //Read all eight pin values then strip away all but pinA and pinB's values
+  if (reading == B00001100 && bFlag)  //Check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
+  {
+    if (encoderPos >= (encLowLim + encIncrement))
+      encoderPos = encoderPos - encIncrement;  //Decrement the encoder's position count, only when above lower limit
+    else
+      encoderPos = encLowLim;       //Stop at minimum, being lower limit
+    bFlag = 0;                      //Reset flags for the next turn
+    aFlag = 0;                      //Reset flags for the next turn
+  } else if (reading == B00001000)  //Signal that we're expecting pinA to signal the transition to detent from free rotation
+    aFlag = 1;
+  sei();  //Restart interrupts
+}
+
+void updateMainMenu()  //Updates the display data for the main menu
+{
+  display.clearDisplay();  //Clear display
+  display.setTextSize(1);  //Set the text size
+  display.setCursor(28, 4);
   display.print(F("Camera Slider"));
-  display.setCursor(25,20);                         //Set the display cursor position
-  display.print(F("Pan & Rotate"));                 //Set the display text
-  display.setCursor(25,30);
+  display.setCursor(25, 20);         //Set the display cursor position
+  display.print(F("Pan & Rotate"));  //Set the display text
+  display.setCursor(25, 30);
   display.print(F("Track Object"));
-  
-  int selected = 0;                                 //Stores cursor vertical position to show selected item
+
+  int selected = 0;  //Stores cursor vertical position to show selected item
   if (encoderPos == 0)
     selected = 20;
   else
     selected = 30;
-  display.setCursor(14,selected);                    //Set the display cursor position
+  display.setCursor(14, selected);  //Set the display cursor position
   display.print(F(">"));
-  display.display();                                //Output the display text
+  display.display();  //Output the display text
 }
 
 void runPanAndRotate()  //Runs the pan and rotate mode sequence
@@ -456,253 +449,241 @@ void runTrack()  //Runs the object tracking mode sequence
   displayEnd();  //Display the end sequence and disable motors
 }
 
-void displayStart()
-{
-  display.clearDisplay();                                   //Clear display
-  display.setTextSize(1);                                   //Set the text size
-  display.setCursor(45,20);                                 //Set the display cursor position
-  display.print(F("Push To"));                              //Set the display text
-  display.setCursor(50,32);
+void displayStart() {
+  display.clearDisplay();       //Clear display
+  display.setTextSize(1);       //Set the text size
+  display.setCursor(45, 20);    //Set the display cursor position
+  display.print(F("Push To"));  //Set the display text
+  display.setCursor(50, 32);
   display.print(F("Start"));
-  display.display();                                        //Output the display text
-  boolean confirmed = false;                                //Both used to confirm button push to select mode
+  display.display();          //Output the display text
+  boolean confirmed = false;  //Both used to confirm button push to select mode
   boolean pressed = false;
-  while(!confirmed)                                         //While the user has not started the panning routine
+  while (!confirmed)  //While the user has not started the panning routine
   {
-    byte buttonState = digitalRead (encButton); 
-    if (buttonState != oldButtonState)
-    {
-      if (millis () - buttonPressTime >= debounceTime)      //Debounce button
+    byte buttonState = digitalRead(encButton);
+    if (buttonState != oldButtonState) {
+      if (millis() - buttonPressTime >= debounceTime)  //Debounce button
       {
-        buttonPressTime = millis ();                        //Time when button was pushed
-        oldButtonState =  buttonState;                      //Remember button state for next time
-        if (buttonState == LOW)
-        {
+        buttonPressTime = millis();    //Time when button was pushed
+        oldButtonState = buttonState;  //Remember button state for next time
+        if (buttonState == LOW) {
           pressed = true;
-        }
-        else 
-        {
-          if (pressed == true)                              //Confirm the input once the button is released again
+        } else {
+          if (pressed == true)  //Confirm the input once the button is released again
           {
             confirmed = true;
           }
-        }  
+        }
       }
     }
   }
-  pinMode(enablePin, OUTPUT);                               //Enable the motors
-  for(int i=countDown ; i> 0 ; i--)                         //Countdown to start
+  pinMode(enablePin, OUTPUT);          //Enable the motors
+  for (int i = countDown; i > 0; i--)  //Countdown to start
   {
-    display.clearDisplay();                                 //Clear display
-    display.setTextSize(2);                                 //Set the text size
-    display.setCursor(60,20);                               //Set the display cursor position
-    display.print(i);                                       //Set the display text
-    display.display(); 
+    display.clearDisplay();     //Clear display
+    display.setTextSize(2);     //Set the text size
+    display.setCursor(60, 20);  //Set the display cursor position
+    display.print(i);           //Set the display text
+    display.display();
     delay(1000);
   }
-  display.clearDisplay();                                   //Clear display
-  display.setTextSize(1);                                   //Set the text size
-  display.setCursor(45,15);                                 //Set the display cursor position
-  display.print(F("Running"));                              //Set the display text
+  display.clearDisplay();       //Clear display
+  display.setTextSize(1);       //Set the text size
+  display.setCursor(45, 15);    //Set the display cursor position
+  display.print(F("Running"));  //Set the display text
   display.display();
 }
 
-void displayEnd()
-{
-  display.clearDisplay();                                   //Clear display
-  display.setTextSize(1);                                   //Set the text size
-  display.setCursor(40,15);                                 //Set the display cursor position
-  display.print(F("Complete"));                             //Set the display text
-  display.setCursor(44,35);
+void displayEnd() {
+  display.clearDisplay();        //Clear display
+  display.setTextSize(1);        //Set the text size
+  display.setCursor(40, 15);     //Set the display cursor position
+  display.print(F("Complete"));  //Set the display text
+  display.setCursor(44, 35);
   display.print(F("Push To"));
-  display.setCursor(27,47);
+  display.setCursor(27, 47);
   display.print(F("Release Motors"));
-  display.display();                                        //Output the display text
-  boolean confirmed = false;                                //Both used to confirm button push to select mode
+  display.display();          //Output the display text
+  boolean confirmed = false;  //Both used to confirm button push to select mode
   boolean pressed = false;
-  while(!confirmed)                                         //While the user has not started the routine
+  while (!confirmed)  //While the user has not started the routine
   {
-    byte buttonState = digitalRead (encButton); 
-    if (buttonState != oldButtonState)
-    {
-      if (millis () - buttonPressTime >= debounceTime)      //Debounce button
+    byte buttonState = digitalRead(encButton);
+    if (buttonState != oldButtonState) {
+      if (millis() - buttonPressTime >= debounceTime)  //Debounce button
       {
-        buttonPressTime = millis ();                        //Time when button was pushed
-        oldButtonState =  buttonState;                      //Remember button state for next time
-        if (buttonState == LOW)
-        {
+        buttonPressTime = millis();    //Time when button was pushed
+        oldButtonState = buttonState;  //Remember button state for next time
+        if (buttonState == LOW) {
           pressed = true;
-        }
-        else 
-        {
-          if (pressed == true)                              //Confirm the input once the button is released again
+        } else {
+          if (pressed == true)  //Confirm the input once the button is released again
           {
             confirmed = true;
           }
-        }  
+        }
       }
     }
   }
-  pinMode(enablePin, INPUT);                                //Open circuit enable pin, disables motors
-  resetVariables ();
+  pinMode(enablePin, INPUT);  //Open circuit enable pin, disables motors
+  resetVariables();
 }
 
-void inputPanAndRotateData ()                                                     //Input required data for pan and rotate mode
+void inputPanAndRotateData()  //Input required data for pan and rotate mode
 {
-  dataInputNo = 0;                                                                //Input pan distance
-  inputField (maxTravDist, minTravDist, maxTravDist, travDistInc);
-  dataInputNo = 1;                                                                //Input pan direction
-  inputField (0, 0, 1, 1);
-  dataInputNo = 2;                                                                //Input rotation angle
-  inputField (initialRotAng, minRotAng, maxRotAng, rotAngInc);
-  dataInputNo = 3;                                                                //Input rotation direction
-  inputField (0, 0, 1, 1);
-  dataInputNo = 4;                                                                //Input total duration
-  inputField (initialDur, minDur, maxDur, durInc);
-  dataInputNo = 5;                                                                //Input count down
-  inputField (minCountDown, minCountDown, maxCountDown, countDownInc);
-  dataInputNo = 6;                                                                //Input loops
-  inputField (loopMin, loopMin, loopMax, loopInc);
+  dataInputNo = 0;  //Input pan distance
+  inputField(maxTravDist, minTravDist, maxTravDist, travDistInc);
+  dataInputNo = 1;  //Input pan direction
+  inputField(0, 0, 1, 1);
+  dataInputNo = 2;  //Input rotation angle
+  inputField(initialRotAng, minRotAng, maxRotAng, rotAngInc);
+  dataInputNo = 3;  //Input rotation direction
+  inputField(0, 0, 1, 1);
+  dataInputNo = 4;  //Input total duration
+  inputField(initialDur, minDur, maxDur, durInc);
+  dataInputNo = 5;  //Input count down
+  inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
+  dataInputNo = 6;  //Input loops
+  inputField(loopMin, loopMin, loopMax, loopInc);
 }
 
-void inputTrackData ()                                                            //Input required data for object tracking mode
+void inputTrackData()  //Input required data for object tracking mode
 {
-  dataInputNo = 0;                                                                //Input pan distance
-  inputField (maxTravDist, minTravDist, maxTravDist, travDistInc);
-  dataInputNo = 1;                                                                //Input pan direction
-  inputField (0, 0, 1, 1);
-  dataInputNo = 2;                                                                //Input rotation angle
-  inputField (initialObjDist, minObjDist, maxObjDist, objInc);
-  dataInputNo = 3;                                                                //Input total duration
-  inputField (initialDur, minDur, maxDur, durInc);
-  dataInputNo = 4;                                                                //Input count down
-  inputField (minCountDown, minCountDown, maxCountDown, countDownInc);
-  dataInputNo = 5;                                                                //Input loops
-  inputField (loopMin, loopMin, loopMax, loopInc);
+  dataInputNo = 0;  //Input pan distance
+  inputField(maxTravDist, minTravDist, maxTravDist, travDistInc);
+  dataInputNo = 1;  //Input pan direction
+  inputField(0, 0, 1, 1);
+  dataInputNo = 2;  //Input rotation angle
+  inputField(initialObjDist, minObjDist, maxObjDist, objInc);
+  dataInputNo = 3;  //Input total duration
+  inputField(initialDur, minDur, maxDur, durInc);
+  dataInputNo = 4;  //Input count down
+  inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
+  dataInputNo = 5;  //Input loops
+  inputField(loopMin, loopMin, loopMax, loopInc);
 }
 
-void updatePanAndRotateDataDisplay ()
-{
-  display.clearDisplay();                                   //Clear display
-  display.setTextSize(1);                                   //Set the text size
-  display.setCursor(2,2);                                   //Set the display cursor position
-  display.print(F("Distance: "));                           //Set the display text
-  display.setCursor(2,12);
-  display.print(F("Trav. Dir: "));
-  display.setCursor(2,22);
-  display.print(F("Rot. Ang: "));
-  display.setCursor(2,32);
-  display.print(F("Rot. Dir: "));
-  display.setCursor(2,42);
-  display.print(F("Duration: "));
-  display.setCursor(2,52);
-  display.print(F("Count Down: "));
-  display.setCursor(2,62);
-  display.print(F("Num Loops: "));
+void updatePanAndRotateDataDisplay() {
+  
   int selected = 0;
-  if (dataInputNo == 0)                                     //Get the cursor position & update changing variable
-  {
-    selected = 2;
-    travDist = encoderPos;
+  if (dataInputNo == 0 || dataInputNo == 1 || dataInputNo == 2 || dataInputNo == 3) {
+    display.clearDisplay();          //Clear display
+    display.setTextSize(1);          //Set the text size
+    display.setCursor(2, 2);         //Set the display cursor position
+    display.print(F("Distance: "));  //Set the display text
+    display.setCursor(2, 12);
+    display.print(F("Trav. Dir: "));
+    display.setCursor(2, 22);
+    display.print(F("Rot. Ang: "));
+    display.setCursor(2, 32);
+    display.print(F("Rot. Dir: "));
+    display.setCursor(2, 42);
+    
+    if (dataInputNo == 0)  //Get the cursor position & update changing variable
+    {
+      selected = 2;
+      travDist = encoderPos;
+    } 
+    else if (dataInputNo == 1) 
+    {
+      selected = 12;
+      travelDir = encoderPos;
+    } 
+    else if (dataInputNo == 2) 
+    {
+      selected = 22;
+      rotAngle = encoderPos;
+    } 
+    else 
+    {
+      selected = 32;
+      rotDir = encoderPos;
+    }
+    display.setCursor(65, selected);  //Set the display cursor position
+    display.print(F(">"));
+    display.setCursor(75, 2);  //Display the field data
+    display.print(travDist);
+    display.print(F("mm"));
+    display.setCursor(75, 12);
+    if (travelDir == 0)
+      display.print(F("Forward"));
+    else
+      display.print(F("Reverse"));
+    display.setCursor(75, 22);
+    display.print(rotAngle);
+    display.print(F("deg"));
+    display.setCursor(75, 32);
+    if (rotDir == 0)
+      display.print(F("Forward"));
+    else
+      display.print(F("Reverse"));
+    display.display();  //Output the display text
+  } 
+  else {
+    display.clearDisplay();   //Clear display
+    display.setTextSize(1);   //Set the text size
+    display.setCursor(2, 2);  //Set the display cursor position
+    display.print(F("Duration: "));
+    display.setCursor(2, 12);
+    display.print(F("Count Down: "));
+    display.setCursor(2, 22);
+    display.print(F("Num Loops: "));
+
+    if (dataInputNo == 4) {
+      selected = 2;
+      travTime = encoderPos;
+      //if(calcInterval (calcTravelPulses ()) < minInterval)    //Flags movement too fast
+      //{
+      //  display.setCursor(40,55);                             //Set the display cursor position
+      //  display.print(F("Too Fast"));                         //Set the display text
+      //}
+    } else if (dataInputNo == 5) {
+      selected = 12;
+      countDown = encoderPos;
+    } else {
+      selected = 22;
+      numLoops = encoderPos;
+    }
+    display.setCursor(75, 2);
+    display.print(travTime);
+    display.print(F("s"));
+    display.setCursor(75, 12);
+    display.print(countDown);
+    display.print(F("s"));
+    display.setCursor(75, 22);
+    display.print(numLoops);
+    display.display();  //Output the display text
   }
-  else if (dataInputNo == 1)
-  {
-    selected = 12;
-    travelDir = encoderPos;
-  }
-  else if (dataInputNo == 2)
-  {
-    selected = 22;
-    rotAngle = encoderPos;
-  }
-  else if (dataInputNo == 3)
-  {
-    selected = 32;
-    rotDir = encoderPos;
-  }
-  else if (dataInputNo == 4)
-  {
-    selected = 42;
-    travTime = encoderPos;
-    //if(calcInterval (calcTravelPulses ()) < minInterval)    //Flags movement too fast
-    //{
-    //  display.setCursor(40,55);                             //Set the display cursor position
-    //  display.print(F("Too Fast"));                         //Set the display text
-    //}
-  }
-  else if (dataInputNo == 5)
-  {
-    selected = 52;
-    countDown = encoderPos;
-  }
-  else
-  {
-    selected = 62;
-    numLoops = encoderPos;
-  }
-  display.setCursor(65,selected);                           //Set the display cursor position
-  display.print(F(">"));
-  display.setCursor(75,2);                                  //Display the field data
-  display.print(travDist);
-  display.print(F("mm"));
-  display.setCursor(75,12);
-  if (travelDir == 0)
-    display.print(F("Forward"));
-  else
-    display.print(F("Reverse"));
-  display.setCursor(75,22);
-  display.print(rotAngle);
-  display.print(F("deg"));
-  display.setCursor(75,32);
-  if (rotDir == 0)
-    display.print(F("Forward"));
-  else
-    display.print(F("Reverse"));
-  display.setCursor(75,42);
-  display.print(travTime);
-  display.print(F("s"));
-  display.setCursor(75,52);
-  display.print(countDown);
-  display.print(F("s"));
-  display.setCursor(75,62);
-  display.print(numLoops);
-  display.display();                                        //Output the display text
 }
 
-void updateTrackDataDisplay ()
-{
-  display.clearDisplay();                                   //Clear display
-  display.setTextSize(1);                                   //Set the text size
-  display.setCursor(2,2);                                  //Set the display cursor position
-  display.print(F("Distance: "));                           //Set the display text
-  display.setCursor(2,12);
+void updateTrackDataDisplay() {
+  display.clearDisplay();          //Clear display
+  display.setTextSize(1);          //Set the text size
+  display.setCursor(2, 2);         //Set the display cursor position
+  display.print(F("Distance: "));  //Set the display text
+  display.setCursor(2, 12);
   display.print(F("Trav. Dir: "));
-  display.setCursor(2,22);
+  display.setCursor(2, 22);
   display.print(F("Obj. Dist: "));
-  display.setCursor(2,32);
+  display.setCursor(2, 32);
   display.print(F("Duration: "));
-  display.setCursor(2,42);
+  display.setCursor(2, 42);
   display.print(F("Count Down: "));
-  display.setCursor(2,52);
+  display.setCursor(2, 52);
   display.print(F("Num Loops: "));
   int selected = 0;
-  if (dataInputNo == 0)                                     //Get the cursor position & update changing variable
+  if (dataInputNo == 0)  //Get the cursor position & update changing variable
   {
     selected = 2;
     travDist = encoderPos;
-  }
-  else if (dataInputNo == 1)
-  {
+  } else if (dataInputNo == 1) {
     selected = 12;
     travelDir = encoderPos;
-  }
-  else if (dataInputNo == 2)
-  {
+  } else if (dataInputNo == 2) {
     selected = 22;
     objDist = encoderPos;
-  }
-  else if (dataInputNo == 3)
-  {
+  } else if (dataInputNo == 3) {
     selected = 32;
     travTime = encoderPos;
     //if(calcInterval (calcTravelPulses ()) < minInterval)    //Flags movement too fast
@@ -710,85 +691,76 @@ void updateTrackDataDisplay ()
     //  display.setCursor(40,55);                             //Set the display cursor position
     //  display.print(F("Too Fast"));                         //Set the display text
     //}
-  }
-  else if (dataInputNo == 4)
-  {
+  } else if (dataInputNo == 4) {
     selected = 42;
     countDown = encoderPos;
-  }
-  else
-  {
+  } else {
     selected = 52;
     numLoops = encoderPos;
   }
-  display.setCursor(65,selected);                           //Set the display cursor position
+  display.setCursor(65, selected);  //Set the display cursor position
   display.print(F(">"));
-  display.setCursor(75,2);                                 //Display the field data
+  display.setCursor(75, 2);  //Display the field data
   display.print(travDist);
   display.print(F("mm"));
-  display.setCursor(75,12);
+  display.setCursor(75, 12);
   if (travelDir == 0)
     display.print(F("Forward"));
   else
     display.print(F("Reverse"));
-  display.setCursor(75,22);
+  display.setCursor(75, 22);
   display.print(objDist);
   display.print(F("mm"));
-  display.setCursor(75,32);
+  display.setCursor(75, 32);
   display.print(travTime);
   display.print(F("s"));
-  display.setCursor(75,42);
+  display.setCursor(75, 42);
   display.print(countDown);
   display.print(F("s"));
-  display.setCursor(75,52);
+  display.setCursor(75, 52);
   display.print(numLoops);
-  display.display();                                        //Output the display text
+  display.display();  //Output the display text
 }
 
-void inputField (int initialSetting, int lowerLimit, int upperLimit, int increment)
-{
+void inputField(int initialSetting, int lowerLimit, int upperLimit, int increment) {
   encLowLim = lowerLimit;
   encHighLim = upperLimit;
   encIncrement = increment;
-  encoderPos = initialSetting;                              //Encoder starts from initial setting
-  prevEncoderPos = encoderPos+1;                            //Set different so that display is updated on first cycle
-  boolean confirmed = false;                                //Both used to confirm button push to select mode
+  encoderPos = initialSetting;      //Encoder starts from initial setting
+  prevEncoderPos = encoderPos + 1;  //Set different so that display is updated on first cycle
+  boolean confirmed = false;        //Both used to confirm button push to select mode
   boolean pressed = false;
-  while(!confirmed)                                         //While the user has not confirmed the input
+  while (!confirmed)  //While the user has not confirmed the input
   {
-    byte buttonState = digitalRead (encButton); 
-    if (buttonState != oldButtonState)
-    {
-      if (millis () - buttonPressTime >= debounceTime)      //Debounce button
+    byte buttonState = digitalRead(encButton);
+    if (buttonState != oldButtonState) {
+      if (millis() - buttonPressTime >= debounceTime)  //Debounce button
       {
-        buttonPressTime = millis ();                        //Time when button was pushed
-        oldButtonState =  buttonState;                      //Remember button state for next time
-        if (buttonState == LOW)
-        {
+        buttonPressTime = millis();    //Time when button was pushed
+        oldButtonState = buttonState;  //Remember button state for next time
+        if (buttonState == LOW) {
           pressed = true;
-        }
-        else 
-        {
-          if (pressed == true)                              //Confirm the input once the button is released again
+        } else {
+          if (pressed == true)  //Confirm the input once the button is released again
           {
             confirmed = true;
             Serial.println("Input Confirmed");
           }
-        }  
+        }
       }
     }
-    if(encoderPos!=prevEncoderPos)                          //Update the display if the encoder position has changed
+    if (encoderPos != prevEncoderPos)  //Update the display if the encoder position has changed
     {
       if (modeSelected == 0)
-        updatePanAndRotateDataDisplay ();
+        updatePanAndRotateDataDisplay();
       else
-        updateTrackDataDisplay ();
-      prevEncoderPos=encoderPos;
+        updateTrackDataDisplay();
+      prevEncoderPos = encoderPos;
     }
   }
 }
 
-void resetVariables ()                                       //Reset variables back to initial values after run
+void resetVariables()  //Reset variables back to initial values after run
 {
   travDist = maxTravDist;
   travTime = initialDur;
@@ -800,57 +772,51 @@ void resetVariables ()                                       //Reset variables b
   numLoops = loopMin;
 }
 
-int calcTravelPulses ()                                       //Calculates the number of pulses required to move a certain distance
+int calcTravelPulses()  //Calculates the number of pulses required to move a certain distance
 {
-  int travP = travDist*pulsesPerMM;
+  int travP = travDist * pulsesPerMM;
   return travP;
 }
 
-int calcRotationPulses ()                                     //Calculate the number of pulses required to rotate a certain angle
+int calcRotationPulses()  //Calculate the number of pulses required to rotate a certain angle
 {
-  int rotP = rotAngle*pulsesPerDeg;
+  int rotP = rotAngle * pulsesPerDeg;
   return rotP;
 }
 
-boolean checkRot (int i)                                      //Used in tracking to calculate the angle required to track object
+boolean checkRot(int i)  //Used in tracking to calculate the angle required to track object
 {
   boolean rotP = false;
   float deltaAngle;
-  if(((travDist/2)-(i/pulsesPerMM)) > 0)
-  {
-    if (currentAngle < 90-(1/pulsesPerDeg))
-    {
-      float newAngle = atan((objDist)/((travDist/2)-(i/pulsesPerMM)))*180/M_PI;
-      deltaAngle = newAngle-currentAngle;
+  if (((travDist / 2) - (i / pulsesPerMM)) > 0) {
+    if (currentAngle < 90 - (1 / pulsesPerDeg)) {
+      float newAngle = atan((objDist) / ((travDist / 2) - (i / pulsesPerMM))) * 180 / M_PI;
+      deltaAngle = newAngle - currentAngle;
+    }
+  } else if (((travDist / 2) - (i / pulsesPerMM)) < 0) {
+    if (currentAngle > 0) {
+      float newAngle = atan((objDist) / ((i / pulsesPerMM) - (travDist / 2))) * 180 / M_PI;
+      deltaAngle = currentAngle - newAngle;
     }
   }
-  else if (((travDist/2)-(i/pulsesPerMM)) < 0)
-  {
-    if (currentAngle > 0)
-    {
-      float newAngle = atan((objDist)/((i/pulsesPerMM)-(travDist/2)))*180/M_PI;
-      deltaAngle = currentAngle-newAngle;
-    }
-  }
-  if(deltaAngle >= (1/pulsesPerDeg))
-  {
+  if (deltaAngle >= (1 / pulsesPerDeg)) {
     rotP = true;
-    if ((travDist/2)-(i/pulsesPerMM) > 0)
-      currentAngle=currentAngle+(1/pulsesPerDeg);
+    if ((travDist / 2) - (i / pulsesPerMM) > 0)
+      currentAngle = currentAngle + (1 / pulsesPerDeg);
     else
-      currentAngle=currentAngle-(1/pulsesPerDeg);
+      currentAngle = currentAngle - (1 / pulsesPerDeg);
   }
   return rotP;
 }
 
-float calcInterval (int numPulses)                                 //Calculate the interval required between pulses to achieve duration
+float calcInterval(int numPulses)  //Calculate the interval required between pulses to achieve duration
 {
-  float inter = travTime*1000000/numPulses;
+  float inter = travTime * 1000000 / numPulses;
   return inter;
 }
 
-float calcRotInterval (int numPulses)                              //Calculate the interval required between pulses to achieve duration
+float calcRotInterval(int numPulses)  //Calculate the interval required between pulses to achieve duration
 {
-  float inter = travTime*1000/numPulses;
+  float inter = travTime * 1000 / numPulses;
   return inter;
 }
