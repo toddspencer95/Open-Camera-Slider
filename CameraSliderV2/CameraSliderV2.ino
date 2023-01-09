@@ -111,6 +111,15 @@ const unsigned char logo[] PROGMEM = {
 #define loopMin 1  //Define minimum, maximum, and increment for looping feature
 #define loopMax 10
 #define loopInc 1
+#define numHoursMin 0  //Define minimum, maximum, and increment hours for timelapse
+#define numHoursMax 23
+#define numHoursInc 1
+#define numMinutesMin 0  //Define minimum, maximum, and increment minutes for timelapse
+#define numMinutesMax 59
+#define numMinutesInc 1
+#define numSecondsMin 0  //Define minimum, maximum, and increment seconds for timelapse
+#define numSecondsMax 59
+#define numSecondsInc 1
 
 static int pinA = 2;                    //Hardware interrupt digital pin 2
 static int pinB = 3;                    //Hardware interrupt digital pin 3
@@ -144,6 +153,9 @@ int rotDir = 0;                  //Define initial rotation direction
 int rotAngle = 180;              //Angle to rotate camera around axis
 int countDown = minCountDown;
 int numLoops = loopMin;
+int numHours = numHoursMin;
+int numMinutes = numMinutesMin;
+int numSeconds = numSecondsMin;
 
 float pulsesPerMM = 50;       //Number of motor pulses for 1mm travel
 float pulsesPerDeg = 4.4444;  //Number of motor pulses for 1 degree of rotation
@@ -267,6 +279,7 @@ void updateMainMenu()  //Updates the display data for the main menu
   display.setCursor(25, 30);
   display.print(F("Track Object"));
 
+
   int selected = 0;  //Stores cursor vertical position to show selected item
   if (encoderPos == 0)
     selected = 20;
@@ -281,98 +294,126 @@ void runPanAndRotate()  //Runs the pan and rotate mode sequence
 {
   inputPanAndRotateData();  //Get user inputs for pan movement
   displayStart();           //Display startup sequence and enable motors
-  for (int i = 1; i <= numLoops; i++) {
-    // Update loop counter
-    display.clearDisplay();  //Clear display
-    display.setTextSize(1);  //Set the text size
-    display.setCursor(30, 30);
-    display.print(F("Pan & Rotate"));
-    display.display();
-    display.setCursor(30, 40);
-    display.print(F("Loop Number:"));
-    display.display();
-    display.setCursor(110, 40);
-    display.print(i);
-    display.display();
-    if (travelDir == 0)  //Set motor travel direction
-    {
-      digitalWrite(travDirPin, LOW);
-      travelDir = 1;
-    } else {
-      digitalWrite(travDirPin, HIGH);
-      travelDir = 0;
-    }
-    if (rotDir == 0)  //Set motor travel direction
-    {
-      digitalWrite(rotDirPin, HIGH);
-      rotDir = 1;
-    } else {
-      digitalWrite(rotDirPin, LOW);
-      rotDir = 0;
-    }
-
-    int travelPulses = calcTravelPulses();  //Calculate the number of motor pulses required to move the travel distance
-    Serial.print("Travel pulses: ");
-    Serial.println(travelPulses);
-    int rotationPulses = calcRotationPulses();  //Calculate the number of motor pulses required to rotate the required angle
-    Serial.print("Rotation pulses: ");
-    Serial.println(rotationPulses);
-    Serial.print("Travel Time: ");
-    Serial.println(travTime);
-
-    // Enter this code if you just want to pan
-    if (travelPulses != 0 && rotationPulses == 0) {
-      float interval = calcInterval(travelPulses);  //Calculate the pulse interval required to move the required distance in the required time
-      Serial.print("Interval: ");
-      Serial.println(interval);
-      for (int i = 1; i <= travelPulses; i++)  //Pulse the motor to move the required distance in the required time
+  travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
+  if (travTime != 0) {
+    for (int i = 1; i <= numLoops; i++) {
+      // Update loop counter
+      display.clearDisplay();  //Clear display
+      display.setTextSize(1);  //Set the text size
+      display.setCursor(30, 30);
+      display.print(F("Pan & Rotate"));
+      display.display();
+      display.setCursor(30, 40);
+      display.print(F("Loop Number:"));
+      display.display();
+      display.setCursor(110, 40);
+      display.print(i);
+      display.display();
+      if (travelDir == 0)  //Set motor travel direction
       {
-        digitalWrite(travStepPin, HIGH);
-        delayMicroseconds(interval / 2);
-        digitalWrite(travStepPin, LOW);
-        delayMicroseconds(interval / 2);
+        digitalWrite(travDirPin, LOW);
+        travelDir = 1;
+      } else {
+        digitalWrite(travDirPin, HIGH);
+        travelDir = 0;
       }
-    }
-
-    // Enter this code if you just want to rotate
-    else if (travelPulses == 0 && rotationPulses != 0) {
-      float interval = calcRotInterval(rotationPulses);  //Calculate the pulse interval required to rotate in the required time
-      Serial.print("Interval: ");
-      Serial.println(interval);
-      for (int i = 1; i <= rotationPulses; i++)  //Pulse the motor to rotate the required angle in the required time
+      if (rotDir == 0)  //Set motor travel direction
       {
-        digitalWrite(rotStepPin, HIGH);
-        delay(interval / 2);
-        digitalWrite(rotStepPin, LOW);
-        delay(interval / 2);
+        digitalWrite(rotDirPin, HIGH);
+        rotDir = 1;
+      } else {
+        digitalWrite(rotDirPin, LOW);
+        rotDir = 0;
       }
-    }
 
-    // Enter this code if you have non-zero pan and rotation inputs
-    else {
-      float interval = calcInterval(travelPulses);  //Calculate the pulse interval required to move the required distance in the required time
-      Serial.print("Interval: ");
-      Serial.println(interval);
-      int travelPerRotation = travelPulses / rotationPulses;  //Calculate how much the camera should pan for each rotation step
-      for (int i = 1; i <= travelPulses; i++) {
-        digitalWrite(travStepPin, HIGH);
-        int checkRotate = i % travelPerRotation;  //Check if a rotation step must be made
-        if (checkRotate == 0)
+      int travelPulses = calcTravelPulses();  //Calculate the number of motor pulses required to move the travel distance
+      Serial.print("Travel pulses: ");
+      Serial.println(travelPulses);
+      int rotationPulses = calcRotationPulses();  //Calculate the number of motor pulses required to rotate the required angle
+      Serial.print("Rotation pulses: ");
+      Serial.println(rotationPulses);
+      Serial.print("Travel Time: ");
+      Serial.println(travTime);
+      // Enter this code if you just want to pan
+      if (travelPulses != 0 && rotationPulses == 0) {
+        float interval = calcInterval(travelPulses);  //Calculate the pulse interval required to move the required distance in the required time
+        Serial.print("Interval: ");
+        Serial.println(interval);
+        for (int i = 1; i <= travelPulses; i++)  //Pulse the motor to move the required distance in the required time
+        {
+          if (travTime > 330)
+          {
+            digitalWrite(travStepPin, HIGH);
+            delay(interval / 2);
+            digitalWrite(travStepPin, LOW);
+            delay(interval / 2);
+          }
+          else
+          {
+            digitalWrite(travStepPin, HIGH);
+            delayMicroseconds(interval / 2);
+            digitalWrite(travStepPin, LOW);
+            delayMicroseconds(interval / 2);            
+          }
+
+        }
+      }
+
+      // Enter this code if you just want to rotate
+      else if (travelPulses == 0 && rotationPulses != 0) {
+        float interval = calcRotInterval(rotationPulses);  //Calculate the pulse interval required to rotate in the required time
+        Serial.print("Interval: ");
+        Serial.println(interval);
+        for (int i = 1; i <= rotationPulses; i++)  //Pulse the motor to rotate the required angle in the required time
+        {
           digitalWrite(rotStepPin, HIGH);
-        delayMicroseconds(interval / 2);
-        digitalWrite(travStepPin, LOW);
-        if (checkRotate == 0)
+          delay(interval / 2);
           digitalWrite(rotStepPin, LOW);
-        delayMicroseconds(interval / 2);
-        /*currentDist = i/pulsesPerMM;
+          delay(interval / 2);
+        }
+      }
+
+      // Enter this code if you have non-zero pan and rotation inputs
+      else {
+        float interval = calcInterval(travelPulses);  //Calculate the pulse interval required to move the required distance in the required time
+        Serial.print("Interval: ");
+        Serial.println(interval);
+        int travelPerRotation = travelPulses / rotationPulses;  //Calculate how much the camera should pan for each rotation step
+        for (int i = 1; i <= travelPulses; i++) {
+          digitalWrite(travStepPin, HIGH);
+          int checkRotate = i % travelPerRotation;  //Check if a rotation step must be made
+          if (checkRotate == 0)
+            digitalWrite(rotStepPin, HIGH);
+          if(travTime > 330)
+          {
+            delay(interval / 2);
+          }
+          else
+          {
+            delayMicroseconds(interval / 2);
+          }
+          digitalWrite(travStepPin, LOW);
+          if (checkRotate == 0)
+            digitalWrite(rotStepPin, LOW);
+          if(travTime > 330)
+          {
+            delay(interval / 2);
+          }
+          else
+          {
+            delayMicroseconds(interval / 2);
+          }
+          /*currentDist = i/pulsesPerMM;
       currentAngle = i/pulsesPerDeg;
       Serial.print("Dist: ");
       Serial.println(currentDist);
       Serial.print("Angle: ");
       Serial.println(currentAngle);*/
+        }
       }
     }
   }
+
   displayEnd();  //Display the end sequence and disable motors
 }
 
@@ -540,11 +581,15 @@ void inputPanAndRotateData()  //Input required data for pan and rotate mode
   inputField(initialRotAng, minRotAng, maxRotAng, rotAngInc);
   dataInputNo = 3;  //Input rotation direction
   inputField(0, 0, 1, 1);
-  dataInputNo = 4;  //Input total duration
-  inputField(initialDur, minDur, maxDur, durInc);
-  dataInputNo = 5;  //Input count down
+  dataInputNo = 4;  //Input Number of Hours
+  inputField(numHours, numHoursMin, numHoursMax, numHoursInc);
+  dataInputNo = 5;  //Input Number of Minutes
+  inputField(numMinutes, numMinutesMin, numMinutesMax, numMinutesInc);
+  dataInputNo = 6;  //Input Number of Seconds
+  inputField(numSeconds, numSecondsMin, numSecondsMax, numSecondsInc);
+  dataInputNo = 7;  //Input count down
   inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
-  dataInputNo = 6;  //Input loops
+  dataInputNo = 8;  //Input loops
   inputField(loopMin, loopMin, loopMax, loopInc);
 }
 
@@ -565,7 +610,7 @@ void inputTrackData()  //Input required data for object tracking mode
 }
 
 void updatePanAndRotateDataDisplay() {
-  
+
   int selected = 0;
   if (dataInputNo == 0 || dataInputNo == 1 || dataInputNo == 2 || dataInputNo == 3) {
     display.clearDisplay();          //Clear display
@@ -579,24 +624,18 @@ void updatePanAndRotateDataDisplay() {
     display.setCursor(2, 32);
     display.print(F("Rot. Dir: "));
     display.setCursor(2, 42);
-    
+
     if (dataInputNo == 0)  //Get the cursor position & update changing variable
     {
       selected = 2;
       travDist = encoderPos;
-    } 
-    else if (dataInputNo == 1) 
-    {
+    } else if (dataInputNo == 1) {
       selected = 12;
       travelDir = encoderPos;
-    } 
-    else if (dataInputNo == 2) 
-    {
+    } else if (dataInputNo == 2) {
       selected = 22;
       rotAngle = encoderPos;
-    } 
-    else 
-    {
+    } else {
       selected = 32;
       rotDir = encoderPos;
     }
@@ -619,39 +658,54 @@ void updatePanAndRotateDataDisplay() {
     else
       display.print(F("Reverse"));
     display.display();  //Output the display text
-  } 
-  else {
+  } else {
     display.clearDisplay();   //Clear display
     display.setTextSize(1);   //Set the text size
     display.setCursor(2, 2);  //Set the display cursor position
-    display.print(F("Duration: "));
+    display.print(F("Num Hours: "));
     display.setCursor(2, 12);
-    display.print(F("Count Down: "));
+    display.print(F("Num Mins: "));
     display.setCursor(2, 22);
+    display.print(F("Num Secs: "));
+    display.setCursor(2, 32);  //Set the display cursor position
+    display.print(F("Count Down: "));
+    display.setCursor(2, 42);
     display.print(F("Num Loops: "));
 
     if (dataInputNo == 4) {
       selected = 2;
-      travTime = encoderPos;
-      //if(calcInterval (calcTravelPulses ()) < minInterval)    //Flags movement too fast
-      //{
-      //  display.setCursor(40,55);                             //Set the display cursor position
-      //  display.print(F("Too Fast"));                         //Set the display text
-      //}
+      numHours = encoderPos;
     } else if (dataInputNo == 5) {
       selected = 12;
+      numMinutes = encoderPos;
+    } else if (dataInputNo == 6) {
+      selected = 22;
+      numSeconds = encoderPos;
+      travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
+      if (calcInterval(calcTravelPulses()) < minInterval)  //Flags movement too fast
+      {
+        display.setCursor(40, 55);     //Set the display cursor position
+        display.print(F("Too Fast"));  //Set the display text
+      }
+    } else if (dataInputNo == 7) {
+      selected = 32;
       countDown = encoderPos;
     } else {
-      selected = 22;
+      selected = 42;
       numLoops = encoderPos;
     }
+    display.setCursor(65, selected);  //Set the display cursor position
+    display.print(F(">"));
     display.setCursor(75, 2);
-    display.print(travTime);
-    display.print(F("s"));
+    display.print(numHours);
     display.setCursor(75, 12);
+    display.print(numMinutes);
+    display.setCursor(75, 22);
+    display.print(numSeconds);
+    display.setCursor(75, 32);
     display.print(countDown);
     display.print(F("s"));
-    display.setCursor(75, 22);
+    display.setCursor(75, 42);
     display.print(numLoops);
     display.display();  //Output the display text
   }
@@ -770,6 +824,9 @@ void resetVariables()  //Reset variables back to initial values after run
   rotAngle = initialRotAng;
   countDown = minCountDown;
   numLoops = loopMin;
+  numHours = numHoursMin;
+  numMinutes = numMinutesMin;
+  numSeconds = numSecondsMin;
 }
 
 int calcTravelPulses()  //Calculates the number of pulses required to move a certain distance
@@ -811,7 +868,18 @@ boolean checkRot(int i)  //Used in tracking to calculate the angle required to t
 
 float calcInterval(int numPulses)  //Calculate the interval required between pulses to achieve duration
 {
-  float inter = travTime * 1000000 / numPulses;
+  // NOTE:
+  // Experimentally found that delay function works best for times greater than 330 seconds and microdelay works better for times less than 330 seconds
+  // THIS WILL CHANGE WITH TRACK LENGTH
+  float inter = 0.0;
+  if (travTime > 330)
+  {
+    inter = travTime * 1000 / numPulses;
+  }
+  else
+  {
+    inter = travTime * 1000000 / numPulses;
+  }
   return inter;
 }
 
