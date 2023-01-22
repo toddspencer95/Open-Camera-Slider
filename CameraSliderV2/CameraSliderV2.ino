@@ -137,7 +137,7 @@ int encLowLim = 0;  //Variables to store the encoder limits and increment
 int encHighLim = 3;
 int encIncrement = 1;
 int dataInputNo = 0;
-int modeSelected = 0;  //Current operating mode (Pan & Rotate, Track Object)
+int modeSelected = 0;  //Current operating mode (Pan & Rotate, Track Object, Point A - Point B)
 
 #define enablePin 5   //Define motor enable pin
 #define travDirPin 6  //Define travel & rotation stepper motor pins
@@ -145,17 +145,19 @@ int modeSelected = 0;  //Current operating mode (Pan & Rotate, Track Object)
 #define rotDirPin 8
 #define rotStepPin 9
 
-float travDist = maxTravDist;    //Distance to travel across slider in millimeters
+float travDist = 0;              //Distance to travel across slider in millimeters
 float travTime = initialDur;     //Travel time to cover the required distance in seconds
 float objDist = initialObjDist;  //Distance of tracked object from slider in millimeters
 int travelDir = 0;               //Define initial travel direction
 int rotDir = 0;                  //Define initial rotation direction
-int rotAngle = 180;              //Angle to rotate camera around axis
+int rotAngle = 0;                //Angle to rotate camera around axis
 int countDown = minCountDown;
 int numLoops = loopMin;
 int numHours = numHoursMin;
 int numMinutes = numMinutesMin;
 int numSeconds = numSecondsMin;
+int currentPos = 0;
+int currentRot = 0;
 
 float pulsesPerMM = 50;       //Number of motor pulses for 1mm travel
 float pulsesPerDeg = 4.4444;  //Number of motor pulses for 1 degree of rotation
@@ -230,8 +232,10 @@ void loop() {
   Serial.println("Mode selected");
   if (modeSelected == 0)  //Run required mode function depending on selection
     runPanAndRotate();
-  else
+  else if (modeSelected == 1)
     runTrack();
+  else
+    runPointAPointB();
 }
 
 void PinA()  //Rotary encoder interrupt service routine for one encoder pin
@@ -275,16 +279,20 @@ void updateMainMenu()  //Updates the display data for the main menu
   display.setCursor(28, 4);
   display.print(F("Camera Slider"));
   display.setCursor(25, 20);         //Set the display cursor position
-  display.print(F("Pan & Rotate"));  //Set the display text
+  display.print(F("Pan & Rotate"));  //Set the displ
   display.setCursor(25, 30);
   display.print(F("Track Object"));
+  display.setCursor(25, 40);
+  display.print(F("Point A - Point B"));
 
 
   int selected = 0;  //Stores cursor vertical position to show selected item
   if (encoderPos == 0)
     selected = 20;
-  else
+  else if (encoderPos == 1)
     selected = 30;
+  else
+    selected = 40;
   display.setCursor(14, selected);  //Set the display cursor position
   display.print(F(">"));
   display.display();  //Output the display text
@@ -500,6 +508,28 @@ void runTrack()  //Runs the object tracking mode sequence
   displayEnd();  //Display the end sequence and disable motors
 }
 
+void runPointAPointB() {
+  inputPointAPointBData();  //Get user inputs for pan movement
+  displayStart();           //Display startup sequence and enable motors
+  travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
+  if (travTime != 0) {
+    for (int i = 1; i <= numLoops; i++) {
+      // Update loop counter
+      display.clearDisplay();  //Clear display
+      display.setTextSize(1);  //Set the text size
+      display.setCursor(30, 30);
+      display.print(F("Point B"));
+      display.display();
+      display.setCursor(30, 40);
+      display.print(F("Loop Number:"));
+      display.display();
+      display.setCursor(110, 40);
+      display.print(i);
+      display.display();
+    }
+  }
+}
+
 void displayStart() {
   display.clearDisplay();       //Clear display
   display.setTextSize(1);       //Set the text size
@@ -622,6 +652,32 @@ void inputTrackData()  //Input required data for object tracking mode
   dataInputNo = 7;  //Input loops
   inputField(loopMin, loopMin, loopMax, loopInc);
 }
+
+void inputPointAPointBData() {
+  dataInputNo = 0;  // Travel Direction
+  inputField(0, 0, 1, 1);
+  dataInputNo = 1;  // Rotation Direction
+  inputField(0, 0, 1, 1);
+  dataInputNo = 2;  // Point B X Position
+  inputField(minTravDist, minTravDist, maxTravDist, travDistInc);
+  dataInputNo = 3;  // Point B Rotation Position
+  inputField(minRotAng, minRotAng, maxRotAng, rotAngInc);
+  dataInputNo = 4;  // Point A X Position
+  inputField(minTravDist, minTravDist, maxTravDist, travDistInc);
+  dataInputNo = 5;  // Point A Rotation Position
+  inputField(minRotAng, minRotAng, maxRotAng, rotAngInc);
+  dataInputNo = 6;  // Set Number of Hours
+  inputField(numHours, numHoursMin, numHoursMax, numHoursInc);
+  dataInputNo = 7;  // Set Number of Minutes
+  inputField(numMinutes, numMinutesMin, numMinutesMax, numMinutesInc);
+  dataInputNo = 8;  // Set Number of Seconds
+  inputField(numSeconds, numSecondsMin, numSecondsMax, numSecondsInc);
+  dataInputNo = 9;  // Set Count Down
+  inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
+  dataInputNo = 10;  // Set Number of Loops
+  inputField(loopMin, loopMin, loopMax, loopInc);
+}
+
 
 void updatePanAndRotateDataDisplay() {
 
@@ -822,6 +878,163 @@ void updateTrackDataDisplay() {
   }
 }
 
+void updatePointAPointBDisplay() {
+  int selected = 0;
+
+  if (dataInputNo == 0 || dataInputNo == 1 || dataInputNo == 2 || dataInputNo == 3 || dataInputNo == 4 || dataInputNo == 5) {
+
+    display.clearDisplay();           //Clear display
+    display.setTextSize(1);           //Set the text size
+    display.setCursor(2, 2);          //Set the display cursor position
+    display.print(F("Trav. Dir: "));  //Set the display text
+    display.setCursor(2, 12);
+    display.print(F("Rot. Dir: "));
+    display.setCursor(2, 22);
+    display.print(F("PntB Pos: "));
+    display.setCursor(2, 32);
+    display.print(F("PntB Rot: "));
+    display.setCursor(2, 42);
+    display.print(F("PntA Pos: "));
+    display.setCursor(2, 52);
+    display.print(F("PntA Rot: "));
+
+    if (rotDir == 0)  //Set motor travel direction
+    {
+      digitalWrite(rotDirPin, HIGH);
+    } else {
+      digitalWrite(rotDirPin, LOW);
+    }
+
+
+    if (dataInputNo == 0)  //Get the cursor position & update changing variable
+    {
+      selected = 2;
+      travelDir = encoderPos;
+    } else if (dataInputNo == 1) {
+      selected = 12;
+      rotDir = encoderPos;
+    } else if (dataInputNo == 2) {
+
+      selected = 22;
+      currentPos = encoderPos;
+
+      //int travelPulses = currentPos * pulsesPerMM;
+      //float interval = calcInterval(travelPulses);
+
+      //if (travelDir == 0)  //Set motor travel direction
+      //{
+      //  digitalWrite(travDirPin, LOW);
+      //}
+      //else {
+      //  digitalWrite(travDirPin, HIGH);
+      //}
+
+      //for (int i = 1; i <= travelPulses; i++) {
+      //  digitalWrite(travStepPin, HIGH);
+      //  delay(interval / 2);
+      //  digitalWrite(travStepPin, LOW);
+      //  delay(interval / 2);
+      //}
+
+    } else if (dataInputNo == 3) {
+      selected = 32;
+      // TODO: Add Rotation Update Code Here
+      // this section updates Point B Rotation
+      currentRot = encoderPos;
+    } else if (dataInputNo == 4) {
+      selected = 42;
+      // TODO: Add Position Update Code Here
+      // this section updates Point A Position
+      travDist = encoderPos;
+    } else {
+      selected = 52;
+      rotAngle = encoderPos;
+    }
+
+    display.setCursor(65, selected);  //Set the display cursor position
+    display.print(F(">"));
+    display.setCursor(75, 2);
+    if (travelDir == 0) {
+      display.print(F("Forward"));
+    } else {
+      display.print(F("Reverse"));
+    }
+    display.setCursor(75, 12);
+    if (rotDir == 0) {
+      display.print(F("Forward"));
+      digitalWrite(rotDirPin, HIGH);
+    } else {
+      display.print(F("Reverse"));
+      digitalWrite(rotDirPin, LOW);
+    }
+    display.setCursor(75, 22);  //Display the field data
+    display.print(currentPos);
+    display.print(F("mm"));
+    display.setCursor(75, 32);
+    display.print(currentRot);
+    display.print(F("deg"));
+    display.setCursor(75, 42);  //Display the field data
+    display.print(travDist);
+    display.print(F("mm"));
+    display.setCursor(75, 52);
+    display.print(rotAngle);
+    display.print(F("deg"));
+    display.display();  //Output the display text
+  }
+
+  else {
+    display.clearDisplay();   //Clear display
+    display.setTextSize(1);   //Set the text size
+    display.setCursor(2, 2);  //Set the display cursor position
+    display.print(F("Num Hours: "));
+    display.setCursor(2, 12);
+    display.print(F("Num Mins: "));
+    display.setCursor(2, 22);
+    display.print(F("Num Secs: "));
+    display.setCursor(2, 32);  //Set the display cursor position
+    display.print(F("Count Down: "));
+    display.setCursor(2, 42);
+    display.print(F("Num Loops: "));
+
+    if (dataInputNo == 6) {
+      selected = 2;
+      numHours = encoderPos;
+    } else if (dataInputNo == 7) {
+      selected = 12;
+      numMinutes = encoderPos;
+    } else if (dataInputNo == 8) {
+      selected = 22;
+      numSeconds = encoderPos;
+      travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
+      if (calcInterval(calcTravelPulses()) < minInterval)  //Flags movement too fast
+      {
+        display.setCursor(40, 55);     //Set the display cursor position
+        display.print(F("Too Fast"));  //Set the display text
+      }
+    } else if (dataInputNo == 9) {
+      selected = 32;
+      countDown = encoderPos;
+    } else {
+      selected = 42;
+      numLoops = encoderPos;
+    }
+    display.setCursor(65, selected);  //Set the display cursor position
+    display.print(F(">"));
+    display.setCursor(75, 2);
+    display.print(numHours);
+    display.setCursor(75, 12);
+    display.print(numMinutes);
+    display.setCursor(75, 22);
+    display.print(numSeconds);
+    display.setCursor(75, 32);
+    display.print(countDown);
+    display.print(F("s"));
+    display.setCursor(75, 42);
+    display.print(numLoops);
+    display.display();  //Output the display text
+  }
+}
+
 void inputField(int initialSetting, int lowerLimit, int upperLimit, int increment) {
   encLowLim = lowerLimit;
   encHighLim = upperLimit;
@@ -853,8 +1066,10 @@ void inputField(int initialSetting, int lowerLimit, int upperLimit, int incremen
     {
       if (modeSelected == 0)
         updatePanAndRotateDataDisplay();
-      else
+      else if (modeSelected == 1)
         updateTrackDataDisplay();
+      else
+        updatePointAPointBDisplay();
       prevEncoderPos = encoderPos;
     }
   }
@@ -862,17 +1077,19 @@ void inputField(int initialSetting, int lowerLimit, int upperLimit, int incremen
 
 void resetVariables()  //Reset variables back to initial values after run
 {
-  travDist = maxTravDist;
+  travDist = 0;
   travTime = initialDur;
   objDist = initialObjDist;
   travelDir = 0;
   rotDir = 0;
-  rotAngle = initialRotAng;
+  rotAngle = 0;
   countDown = minCountDown;
   numLoops = loopMin;
   numHours = numHoursMin;
   numMinutes = numMinutesMin;
   numSeconds = numSecondsMin;
+  currentPos = 0;
+  currentRot = 0;
 }
 
 int calcTravelPulses()  //Calculates the number of pulses required to move a certain distance
