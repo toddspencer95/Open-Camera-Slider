@@ -77,6 +77,11 @@ MultiStepper StepperControl;
 #define numSecondsMin 0  //Define minimum, maximum, and increment seconds for timelapse
 #define numSecondsMax 59
 #define numSecondsInc 1
+
+// Define Limit Switches
+#define leftlimit 10                        //PB Define limit switches
+#define rightlimit 11
+
 float travDist = 0;              //Distance to travel across slider in millimeters
 float travTime = initialDur;     //Travel time to cover the required distance in seconds
 float objDist = initialObjDist;  //Distance of tracked object from slider in millimeters
@@ -162,7 +167,7 @@ const unsigned char logo[] PROGMEM = {
 
 void setup() {
 
-  // put your setup code here, to run once:
+  // Initiate Serial Communication Protocol
   Serial.begin(9600);
   stepperPan.setMaxSpeed(6400);
   stepperPan.setSpeed(6400);
@@ -173,11 +178,34 @@ void setup() {
   StepperControl.addStepper(stepperPan);
   StepperControl.addStepper(stepperRotate);
 
+  // Set Pins and attach Interrupts
   pinMode(pinA, INPUT_PULLUP);       //Set pinA as an input, pulled HIGH to the logic voltage
   pinMode(pinB, INPUT_PULLUP);       //Set pinB as an input, pulled HIGH to the logic voltage
+  pinMode(leftlimit, INPUT_PULLUP);
+  pinMode(rightlimit, INPUT_PULLUP);  
   attachInterrupt(0, PinA, RISING);  //Set an interrupt on PinA
   attachInterrupt(1, PinB, RISING);  //Set an interrupt on PinB
   pinMode(encButton, INPUT_PULLUP);  //Set the encoder button as an input, pulled HIGH to the logic voltage
+  display.clearDisplay();                                 //Clear the display
+  display.setTextColor(SSD1306_WHITE);                    //Set the text colour to white
+  display.drawBitmap(0, 0, logo, 128, 64, WHITE);         //Display bitmap from array
+  display.display();                                      
+  delay(2000);
+  display.clearDisplay(); 
+                                  //Clear display
+  if(!digitalRead(leftlimit))
+    {
+      Serial.println("Left Limit triggered");
+    }                                
+  if(!digitalRead(rightlimit))
+    {
+      Serial.println("Right Limit triggered");
+    }     
+  
+  
+  
+  
+  Serial.println("Setup complete"); 
 }
 
 void loop() {
