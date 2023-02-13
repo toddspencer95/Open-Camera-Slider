@@ -86,7 +86,7 @@ const unsigned char logo[] PROGMEM = {
 #define minDur 10
 #define maxDur 330  // Max allowable duration is 5min 30 seconds due to pulse size
 #define durInc 5
-#define initialRotAng 180  //Define rotation initial setting, minimum, maximum and increment
+#define initialRotAng 0  //Define rotation initial setting, minimum, maximum and increment
 #define minRotAng 0
 #define maxRotAng 360
 #define rotAngInc 10
@@ -164,13 +164,15 @@ void setup() {
     for (;;)
       ;  //Don't proceed, loop forever
   }
-  pinMode(pinA, INPUT_PULLUP);       //Set pinA as an input, pulled HIGH to the logic voltage
-  pinMode(pinB, INPUT_PULLUP);       //Set pinB as an input, pulled HIGH to the logic voltage
-  attachInterrupt(0, PinA, RISING);  //Set an interrupt on PinA
-  attachInterrupt(1, PinB, RISING);  //Set an interrupt on PinB
-  pinMode(encButton, INPUT_PULLUP);  //Set the encoder button as an input, pulled HIGH to the logic voltage
-  pinMode(enablePin, INPUT);         //Open circuit enable pin, disables motors
-  pinMode(travDirPin, OUTPUT);       //Define the travel stepper motor pins
+  pinMode(pinA, INPUT_PULLUP);  //Set pinA as an input, pulled HIGH to the logic voltage
+  pinMode(pinB, INPUT_PULLUP);  //Set pinB as an input, pulled HIGH to the logic voltage
+  pinMode(leftlimit, INPUT_PULLUP);
+  pinMode(rightlimit, INPUT_PULLUP);  //Set pinB as an input, pulled HIGH to the logic voltage
+  attachInterrupt(0, PinA, RISING);   //Set an interrupt on PinA
+  attachInterrupt(1, PinB, RISING);   //Set an interrupt on PinB
+  pinMode(encButton, INPUT_PULLUP);   //Set the encoder button as an input, pulled HIGH to the logic voltage
+  pinMode(enablePin, INPUT);          //Open circuit enable pin, disables motors
+  pinMode(travDirPin, OUTPUT);        //Define the travel stepper motor pins
   pinMode(travStepPin, OUTPUT);
   pinMode(rotDirPin, OUTPUT);  //Define the rotation stepper motor pins
   pinMode(rotStepPin, OUTPUT);
@@ -270,12 +272,12 @@ void updateMainMenu() {  //Updates the display data for the main menu
   display.setTextSize(1);  //Set the text size
   display.setCursor(28, 4);
   display.print(F("Camera Slider"));
-  display.setCursor(25, 20);         //Set the display cursor position
-  display.print(F("Pan & Rotate"));  //Set the displ
+  display.setCursor(25, 20);        //Set the display cursor position
+  display.print(F("Home Slider"));  //
   display.setCursor(25, 30);
-  display.print(F("Track Object"));
+  display.print(F("Pan & Rotate"));
   display.setCursor(25, 40);
-  display.print(F("Point A - Point B"));
+  display.print(F("Track Object"));
 
 
   int selected = 0;  //Stores cursor vertical position to show selected item
@@ -292,14 +294,20 @@ void updateMainMenu() {  //Updates the display data for the main menu
 
 void runHomeSlider() {
 
+  inputHomeSliderData();
   displayStart();  //Display startup sequence and enable motors
   display.setCursor(35, 30);
   display.print(F("Homing Slider"));
   display.display();
-  //Set motor travel direction
-  // digitalWrite(travDirPin, LOW);
+  if (travelDir == 0)  //Set motor travel direction and then flip direction for back off when reaching the end of the slider
+  {
+    digitalWrite(travDirPin, LOW);
+    travelDir = 1;
+  } else {
+    digitalWrite(travDirPin, HIGH);
+    travelDir = 0;
+  }
 
-  digitalWrite(travDirPin, HIGH);
   int travelPulses = 25000;
   float interval = 380;
 
@@ -317,9 +325,10 @@ void runHomeSlider() {
       display.setCursor(28, 4);
       display.print(F("Limit Reached"));
       display.display();
-
-
-      digitalWrite(travDirPin, LOW);
+      if (travelDir == 0)  //Set motor travel direction
+        digitalWrite(travDirPin, LOW);
+      else
+        digitalWrite(travDirPin, HIGH);
       for (int j = 1; j < 100; j++) {
         digitalWrite(travStepPin, HIGH);
         delayMicroseconds(interval / 2);
@@ -402,15 +411,16 @@ void runPanAndRotate() {  //Runs the pan and rotate mode sequence
             display.display();
             //delay(2000);
             if (travelDir == 0)  //Set motor travel direction
-              digitalWrite(travDirPin, HIGH);
-            else
               digitalWrite(travDirPin, LOW);
+            else
+              digitalWrite(travDirPin, HIGH);
             for (int j = 1; j < 100; j++) {
               digitalWrite(travStepPin, HIGH);
               delayMicroseconds(interval / 2);
               digitalWrite(travStepPin, LOW);
               delayMicroseconds(interval / 2);
             }
+
             break;
           }
         }
@@ -462,9 +472,9 @@ void runPanAndRotate() {  //Runs the pan and rotate mode sequence
             display.display();
             //delay(2000);
             if (travelDir == 0)  //Set motor travel direction
-              digitalWrite(travDirPin, HIGH);
-            else
               digitalWrite(travDirPin, LOW);
+            else
+              digitalWrite(travDirPin, HIGH);
             for (int j = 1; j < 100; j++) {
               digitalWrite(travStepPin, HIGH);
               delayMicroseconds(interval / 2);
@@ -544,10 +554,10 @@ void runTrack() {  //Runs the object tracking mode sequence
           display.display();
           //delay(2000);
           if (travelDir == 0)  //Set motor travel direction
-            digitalWrite(travDirPin, HIGH);
-          else
             digitalWrite(travDirPin, LOW);
-          for (int j = 1; j < 100; j++) {
+          else
+            digitalWrite(travDirPin, HIGH);
+          for (int j = 1; j < 500; j++) {
             digitalWrite(travStepPin, HIGH);
             delayMicroseconds(interval / 2);
             digitalWrite(travStepPin, LOW);
@@ -580,9 +590,9 @@ void runTrack() {  //Runs the object tracking mode sequence
           display.display();
           //delay(2000);
           if (travelDir == 0)  //Set motor travel direction
-            digitalWrite(travDirPin, HIGH);
-          else
             digitalWrite(travDirPin, LOW);
+          else
+            digitalWrite(travDirPin, HIGH);
           for (int j = 1; j < 100; j++) {
             digitalWrite(travStepPin, HIGH);
             delayMicroseconds(interval / 2);
@@ -682,6 +692,9 @@ void displayEnd() {
 }
 
 void inputHomeSliderData() {  //Input required data for homing slider
+
+  dataInputNo = 0;  //Input Homing Direction
+  inputField(0, 0, 1, 1);
 }
 
 void inputPanAndRotateData() {  //Input required data for pan and rotate mode
@@ -726,6 +739,20 @@ void inputTrackData() {  //Input required data for object tracking mode
 }
 
 void updateHomeSliderDisplay() {
+
+  display.clearDisplay();           //Clear display
+  display.setTextSize(1);           //Set the text size
+  display.setCursor(2, 2);          //Set the display cursor position
+  display.print(F("Home Dir:  "));  //Set the display text
+  travelDir = encoderPos;
+  display.setCursor(65, 2);  //Set the display cursor position
+  display.print(F(">"));
+  if (travelDir == 0)
+    display.print(F(" Right"));
+  else
+    display.print(F(" Left"));
+
+  display.display();  //Output the display text
 }
 
 void updatePanAndRotateDataDisplay() {
@@ -765,17 +792,17 @@ void updatePanAndRotateDataDisplay() {
     display.print(F("mm"));
     display.setCursor(75, 12);
     if (travelDir == 0)
-      display.print(F("Forward"));
+      display.print(F("Right"));
     else
-      display.print(F("Reverse"));
+      display.print(F("Left"));
     display.setCursor(75, 22);
     display.print(rotAngle);
     display.print(F("deg"));
     display.setCursor(75, 32);
     if (rotDir == 0)
-      display.print(F("Forward"));
+      display.print(F("CCW"));
     else
-      display.print(F("Reverse"));
+      display.print(F("CW"));
     display.display();  //Output the display text
   } else {
     display.clearDisplay();   //Clear display
@@ -862,9 +889,9 @@ void updateTrackDataDisplay() {
     display.print(F("mm"));
     display.setCursor(75, 12);
     if (travelDir == 0)
-      display.print(F("Forward"));
+      display.print(F("Right"));
     else
-      display.print(F("Reverse"));
+      display.print(F("Left"));
     display.setCursor(75, 22);
     display.print(objDist);
     display.print(F("mm"));
