@@ -152,7 +152,8 @@ int currentPos = 0;
 int currentRot = 0;
 
 float pulsesPerMM = 50;       //Number of motor pulses for 1mm travel
-float pulsesPerDeg = 4.4444;  //Number of motor pulses for 1 degree of rotation
+//float pulsesPerDeg = 4.4444;  //Number of motor pulses for 1 degree of rotation old without gear
+float pulsesPerDeg = 17.7777;  //Number of motor pulses for 1 degree of rotation - with gear
 float currentDist = 0;
 float currentAngle = 0;
 
