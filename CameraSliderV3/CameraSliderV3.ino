@@ -512,11 +512,11 @@ void runTrack() {  //Runs the object tracking mode sequence
       if (travelDir == 0)  //Set motor travel and rotate directions, flip the direction for next loop
       {
         digitalWrite(travDirPin, LOW);
-        digitalWrite(rotDirPin, LOW);
+        digitalWrite(rotDirPin, HIGH);
         travelDir = 1;
       } else {
         digitalWrite(travDirPin, HIGH);
-        digitalWrite(rotDirPin, HIGH);
+        digitalWrite(rotDirPin, LOW);
         travelDir = 0;
       }
       int travelPulses = calcTravelPulses();  //Calculates the number of pulses required to move the travel distance
