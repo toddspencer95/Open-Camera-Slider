@@ -703,6 +703,11 @@ void updatePanAndRotateDataDisplay() {
   display.setCursor(75, 32);
   display.print(rotDir == 0 ? F("CCW") : F("CW"));
   display.display();
+  
+  // Check if distance/rotation parameters are complete and switch to timing display
+  if (dataInputNo > 3) {
+    updateTimingDisplay();
+  }
 }
 
 void updatePointADataDisplay() {
@@ -738,6 +743,11 @@ void updatePointADataDisplay() {
   display.print(rotAngle);
   display.print(F("deg"));
   display.display();
+  
+  // Check if distance/rotation parameters are complete and switch to timing display
+  if (dataInputNo > 3) {
+    updateTimingDisplay();
+  }
 }
 
 void updateTimingDisplay() {
