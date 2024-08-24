@@ -167,7 +167,6 @@ void PinB();
 void updateMainMenu();
 void runHomeSlider();
 void runPanAndRotate();
-void runTrack();
 void runPointAToPointB();
 void setPointB();
 void setPointA();
@@ -175,7 +174,6 @@ void setTiming();
 int toggleDirection(int dir, int pin);
 void moveMotor(int pulses, float interval, int stepPin, int dirPin, int limitSwitch1 = -1, int limitSwitch2 = -1);
 void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch);
-void moveTracking(int travelPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch);
 void pulseMotor(int pin, float interval);
 void displayLimitReached();
 void backOffMotor(int pin, int dirPin, float interval);
@@ -187,13 +185,11 @@ void countdown();
 void resetVariables();
 void inputHomeSliderData();
 void inputPanAndRotateData();
-void inputTrackData();
 void inputPointAData();
 void inputField(int initialSetting, int lowerLimit, int upperLimit, int increment);
 void updateInputDisplay();
 void updateHomeSliderDisplay();
 void updatePanAndRotateDataDisplay();
-void updateTrackDataDisplay();
 void updatePointADataDisplay();
 void updateTimingDisplay();
 int calcTravelPulses();
@@ -289,8 +285,7 @@ void executeMode() {
   switch (modeSelected) {
     case 0: runHomeSlider(); break;
     case 1: runPanAndRotate(); break;
-    case 2: runTrack(); break;
-    case 3: runPointAToPointB(); break;
+    case 2: runPointAToPointB(); break;
     default: break;
   }
 }
@@ -335,8 +330,6 @@ void updateMainMenu() {
   display.setCursor(25, 30);
   display.print(F("Pan & Rotate"));
   display.setCursor(25, 40);
-  display.print(F("Track Object"));
-  display.setCursor(25, 50);
   display.print(F("Point A - Point B"));
 
   int selected = encoderPos * 10 + 20;
@@ -380,28 +373,6 @@ void runPanAndRotate() {
       } else {
         movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       }
-    }
-  }
-  displayEnd();
-}
-
-void runTrack() {
-  inputTrackData();
-  setTiming();
-  displayStart();
-  travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
-
-  if (travTime != 0) {
-    for (int i = 1; i <= numLoops; i++) {
-      displayLoopInfo(i, F("Object Tracking"));
-      travelDir = toggleDirection(travelDir, travDirPin);
-      rotDir = toggleDirection(rotDir, rotDirPin);
-
-      int travelPulses = calcTravelPulses();
-      float interval = calcInterval(travelPulses);
-      currentAngle = atan(objDist / (travDist / 2)) * 180 / M_PI;
-
-      moveTracking(travelPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
     }
   }
   displayEnd();
@@ -491,22 +462,6 @@ void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int 
       if (i % travelPerRotation == 0) {
         pulseMotor(rotStepPin, interval);
       }
-    } else {
-      displayLimitReached();
-      backOffMotor(travStepPin, travDirPin, interval);
-      break;
-    }
-  }
-}
-
-void moveTracking(int travelPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch) {
-  for (int i = 1; i <= travelPulses; i++) {
-    if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
-      pulseMotor(travStepPin, interval);
-      if (checkRot(i)) {
-        pulseMotor(rotStepPin, interval);
-      }
-      currentDist = i / pulsesPerMM;
     } else {
       displayLimitReached();
       backOffMotor(travStepPin, travDirPin, interval);
@@ -650,25 +605,6 @@ void inputPanAndRotateData() {
   inputField(0, 0, 1, 1);
 }
 
-void inputTrackData() {
-  dataInputNo = 0;
-  inputField(0, minTravDist, maxTravDist, travDistInc);
-  dataInputNo = 1;
-  inputField(0, 0, 1, 1);
-  dataInputNo = 2;
-  inputField(initialObjDist, minObjDist, maxObjDist, objInc);
-  dataInputNo = 3;
-  inputField(numHours, numHoursMin, numHoursMax, numHoursInc);
-  dataInputNo = 4;
-  inputField(numMinutes, numMinutesMin, numMinutesMax, numMinutesInc);
-  dataInputNo = 5;
-  inputField(numSeconds, numSecondsMin, numSecondsMax, numSecondsInc);
-  dataInputNo = 6;
-  inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
-  dataInputNo = 7;
-  inputField(loopMin, loopMin, loopMax, loopInc);
-}
-
 void inputPointAData() {
   dataInputNo = 0;
   inputField(0, 0, 1, 1);  // Travel direction
@@ -717,8 +653,7 @@ void updateInputDisplay() {
   switch (modeSelected) {
     case 0: updateHomeSliderDisplay(); break;
     case 1: updatePanAndRotateDataDisplay(); break;
-    case 2: updateTrackDataDisplay(); break;
-    case 3: updatePointADataDisplay(); break;
+    case 2: updatePointADataDisplay(); break;
     default: break;
   }
 }
@@ -767,36 +702,6 @@ void updatePanAndRotateDataDisplay() {
   display.print(F("deg"));
   display.setCursor(75, 32);
   display.print(rotDir == 0 ? F("CCW") : F("CW"));
-  display.display();
-}
-
-void updateTrackDataDisplay() {
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(2, 2);
-  display.print(F("Distance: "));
-  display.setCursor(2, 12);
-  display.print(F("Trav. Dir: "));
-  display.setCursor(2, 22);
-  display.print(F("Obj. Dist: "));
-
-  int selected = 0;
-  switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos; break;
-    case 1: selected = 12; travelDir = encoderPos; break;
-    default: selected = 22; objDist = encoderPos; break;
-  }
-
-  display.setCursor(65, selected);
-  display.print(F(">"));
-  display.setCursor(75, 2);
-  display.print(travDist);
-  display.print(F("mm"));
-  display.setCursor(75, 12);
-  display.print(travelDir == 0 ? F("Right") : F("Left"));
-  display.setCursor(75, 22);
-  display.print(objDist);
-  display.print(F("mm"));
   display.display();
 }
 
