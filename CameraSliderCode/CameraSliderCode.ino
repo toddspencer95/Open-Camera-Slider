@@ -670,7 +670,8 @@ void updateHomeSliderDisplay() {
   display.display();
 }
 
-void updatePanAndRotateDataDisplay() {
+// Consolidated function for distance/rotation display
+void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, int rotDir, int dataInputNo) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
@@ -703,53 +704,14 @@ void updatePanAndRotateDataDisplay() {
   display.setCursor(75, 32);
   display.print(rotDir == 0 ? F("CCW") : F("CW"));
   display.display();
-  
+
   // Check if distance/rotation parameters are complete and switch to timing display
   if (dataInputNo > 3) {
     updateTimingDisplay();
   }
 }
 
-void updatePointADataDisplay() {
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(2, 2);
-  display.print(F("Trav. Dir: "));
-  display.setCursor(2, 12);
-  display.print(F("Distance: "));
-  display.setCursor(2, 22);
-  display.print(F("Rot. Dir: "));
-  display.setCursor(2, 32);
-  display.print(F("Rot. Ang: "));
-
-  int selected = 0;
-  switch (dataInputNo) {
-    case 0: selected = 2; travelDir = encoderPos; break;
-    case 1: selected = 12; travDist = encoderPos; break;
-    case 2: selected = 22; rotDir = encoderPos; break;
-    default: selected = 32; rotAngle = encoderPos; break;
-  }
-
-  display.setCursor(65, selected);
-  display.print(F(">"));
-  display.setCursor(75, 2);
-  display.print(travelDir == 0 ? F("Right") : F("Left"));
-  display.setCursor(75, 12);
-  display.print(travDist);
-  display.print(F("mm"));
-  display.setCursor(75, 22);
-  display.print(rotDir == 0 ? F("CCW") : F("CW"));
-  display.setCursor(75, 32);
-  display.print(rotAngle);
-  display.print(F("deg"));
-  display.display();
-  
-  // Check if distance/rotation parameters are complete and switch to timing display
-  if (dataInputNo > 3) {
-    updateTimingDisplay();
-  }
-}
-
+// Function to handle the timing display
 void updateTimingDisplay() {
   display.clearDisplay();
   display.setTextSize(1);
@@ -787,6 +749,16 @@ void updateTimingDisplay() {
   display.setCursor(75, 42);
   display.print(numLoops);
   display.display();
+}
+
+// Updated function for pan and rotate data display using the consolidated function
+void updatePanAndRotateDataDisplay() {
+  updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+}
+
+// Updated function for point A data display using the consolidated function
+void updatePointADataDisplay() {
+  updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
 }
 
 int calcTravelPulses() {
