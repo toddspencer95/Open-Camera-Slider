@@ -154,7 +154,7 @@ const int numMinutesMax = 59;
 const int numMinutesInc = 1;
 const int numSecondsMin = 0;
 const int numSecondsMax = 59;
-const int numSecondsInc = 1;
+const int numSecondsInc = 1; 
 
 // Function prototypes
 void setupPins();
@@ -670,8 +670,11 @@ void updateHomeSliderDisplay() {
   display.display();
 }
 
+// Global variable to track confirmation state
+bool isConfirmed = false;
+
 // Consolidated function for distance/rotation display
-void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, int rotDir, int dataInputNo) {
+void updateDistanceRotationDisplay(int& travDist, int& travelDir, int& rotAngle, int& rotDir, int dataInputNo) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
@@ -685,10 +688,10 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 
   int selected = 0;
   switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos; break;
-    case 1: selected = 12; travelDir = encoderPos; break;
-    case 2: selected = 22; rotAngle = encoderPos; break;
-    default: selected = 32; rotDir = encoderPos; break;
+    case 0: selected = 2; if (!isConfirmed) travDist = encoderPos; break;
+    case 1: selected = 12; if (!isConfirmed) travelDir = encoderPos; break;
+    case 2: selected = 22; if (!isConfirmed) rotAngle = encoderPos; break;
+    default: selected = 32; if (!isConfirmed) rotDir = encoderPos; break;
   }
 
   display.setCursor(65, selected);
@@ -704,15 +707,10 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
   display.setCursor(75, 32);
   display.print(rotDir == 0 ? F("CCW") : F("CW"));
   display.display();
-
-  // Check if distance/rotation parameters are complete and switch to timing display
-  if (dataInputNo > 3) {
-    updateTimingDisplay();
-  }
 }
 
 // Function to handle the timing display
-void updateTimingDisplay() {
+void updateTimingDisplay(int& numHours, int& numMinutes, int& numSeconds, int& countDown, int& numLoops, int dataInputNo) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
@@ -728,11 +726,11 @@ void updateTimingDisplay() {
 
   int selected = 0;
   switch (dataInputNo) {
-    case 4: selected = 2; numHours = encoderPos; break;
-    case 5: selected = 12; numMinutes = encoderPos; break;
-    case 6: selected = 22; numSeconds = encoderPos; break;
-    case 7: selected = 32; countDown = encoderPos; break;
-    default: selected = 42; numLoops = encoderPos; break;
+    case 4: selected = 2; if (!isConfirmed) numHours = encoderPos; break;
+    case 5: selected = 12; if (!isConfirmed) numMinutes = encoderPos; break;
+    case 6: selected = 22; if (!isConfirmed) numSeconds = encoderPos; break;
+    case 7: selected = 32; if (!isConfirmed) countDown = encoderPos; break;
+    default: selected = 42; if (!isConfirmed) numLoops = encoderPos; break;
   }
 
   display.setCursor(65, selected);
@@ -751,14 +749,42 @@ void updateTimingDisplay() {
   display.display();
 }
 
+// Function to handle confirmation of a selection
+void confirmSelection() {
+  // Confirm the current parameter and move to the next one
+  isConfirmed = true;  // Lock the current parameter
+  dataInputNo++;       // Move to the next parameter
+
+  // If we move past the last timing parameter, reset
+  if (dataInputNo > 7) {
+    dataInputNo = 0;
+  }
+
+  // Reset confirmation for the next parameter
+  isConfirmed = false;
+}
+
 // Updated function for pan and rotate data display using the consolidated function
 void updatePanAndRotateDataDisplay() {
-  updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+  // Display distance/rotation parameters if dataInputNo is 0 to 3
+  if (dataInputNo <= 3) {
+    updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+  } 
+  // Display timing parameters if dataInputNo is 4 or greater
+  else {
+    updateTimingDisplay(numHours, numMinutes, numSeconds, countDown, numLoops, dataInputNo);
+  }
 }
 
 // Updated function for point A data display using the consolidated function
 void updatePointADataDisplay() {
-  updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+  // Same logic as updatePanAndRotateDataDisplay
+  if (dataInputNo <= 3) {
+    updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+  } 
+  else {
+    updateTimingDisplay(numHours, numMinutes, numSeconds, countDown, numLoops, dataInputNo);
+  }
 }
 
 int calcTravelPulses() {
