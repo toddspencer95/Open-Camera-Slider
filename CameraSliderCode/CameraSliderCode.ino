@@ -670,9 +670,6 @@ void updateHomeSliderDisplay() {
   display.display();
 }
 
-// Global variable to track confirmation state
-bool isConfirmed = false;
-
 // Consolidated function for distance/rotation display
 void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, int rotDir, int dataInputNo) {
   display.clearDisplay();
@@ -688,10 +685,10 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 
   int selected = 0;
   switch (dataInputNo) {
-    case 0: selected = 2; if (!isConfirmed) travDist = encoderPos; break;
-    case 1: selected = 12; if (!isConfirmed) travelDir = encoderPos; break;
-    case 2: selected = 22; if (!isConfirmed) rotAngle = encoderPos; break;
-    default: selected = 32; if (!isConfirmed) rotDir = encoderPos; break;
+    case 0: selected = 2; travDist = encoderPos;
+    case 1: selected = 12; travelDir = encoderPos;
+    case 2: selected = 22; rotAngle = encoderPos;
+    default: selected = 32; rotDir = encoderPos;
   }
 
   display.setCursor(65, selected);
@@ -726,11 +723,11 @@ void updateTimingDisplay(int& numHours, int& numMinutes, int& numSeconds, int& c
 
   int selected = 0;
   switch (dataInputNo) {
-    case 4: selected = 2; if (!isConfirmed) numHours = encoderPos; break;
-    case 5: selected = 12; if (!isConfirmed) numMinutes = encoderPos; break;
-    case 6: selected = 22; if (!isConfirmed) numSeconds = encoderPos; break;
-    case 7: selected = 32; if (!isConfirmed) countDown = encoderPos; break;
-    default: selected = 42; if (!isConfirmed) numLoops = encoderPos; break;
+    case 4: selected = 2; numHours = encoderPos;
+    case 5: selected = 12; numMinutes = encoderPos;
+    case 6: selected = 22; numSeconds = encoderPos;
+    case 7: selected = 32; countDown = encoderPos;
+    default: selected = 42; numLoops = encoderPos;
   }
 
   display.setCursor(65, selected);
@@ -747,21 +744,6 @@ void updateTimingDisplay(int& numHours, int& numMinutes, int& numSeconds, int& c
   display.setCursor(75, 42);
   display.print(numLoops);
   display.display();
-}
-
-// Function to handle confirmation of a selection
-void confirmSelection() {
-  // Confirm the current parameter and move to the next one
-  isConfirmed = true;  // Lock the current parameter
-  dataInputNo++;       // Move to the next parameter
-
-  // If we move past the last timing parameter, reset
-  if (dataInputNo > 7) {
-    dataInputNo = 0;
-  }
-
-  // Reset confirmation for the next parameter
-  isConfirmed = false;
 }
 
 // Updated function for pan and rotate data display using the consolidated function
