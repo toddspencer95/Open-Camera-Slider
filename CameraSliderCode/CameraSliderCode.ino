@@ -388,17 +388,20 @@ void runPanAndRotate() {
       int travelPulses = calcTravelPulses();
       int rotationPulses = calcRotationPulses();
       float interval = calcInterval(travelPulses);
+      float rotation_interval = calcRotInterval(rotationPulses);
 
       // This is for Pan Only
       if (travelPulses != 0 && rotationPulses == 0) {
         moveMotor(travelPulses, interval, travStepPin, travDirPin, leftLimitSwitch, rightLimitSwitch);
-      
-      // This is for Rotate Ony
-      // Notice that rotation interval is different from travel interval
+
+        // This is for Rotate Ony
+        // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
-        float rotation_interval = calcRotInterval(rotationPulses);
-        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
-      
+        
+        for (int i = 1; i <= rotationPulses; i++) {
+          pulseMotor(rotStepPin, rotation_interval);
+        }
+
       // This is for Pan and Rotate
       } else {
         movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
@@ -441,6 +444,7 @@ void runPointAToPointB() {
       int travelPulses = calcTravelPulses();
       int rotationPulses = calcRotationPulses();
       float interval = calcInterval(travelPulses);
+      float rotation_interval = calcRotInterval(rotationPulses);  
 
       // This is for Pan Only
       if (travelPulses != 0 && rotationPulses == 0) {
@@ -449,7 +453,6 @@ void runPointAToPointB() {
       // This is for Rotate Ony
       // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
-        float rotation_interval = calcRotInterval(rotationPulses);
         moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       
       // This is for Pan and Rotate
