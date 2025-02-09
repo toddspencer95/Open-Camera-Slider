@@ -685,10 +685,10 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 
   int selected = 0;
   switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos;
-    case 1: selected = 12; travelDir = encoderPos;
-    case 2: selected = 22; rotAngle = encoderPos;
-    default: selected = 32; rotDir = encoderPos;
+    case 0: selected = 2; travDist = encoderPos; break;
+    case 1: selected = 12; travelDir = encoderPos; break;
+    case 2: selected = 22; rotAngle = encoderPos; break;
+    default: selected = 32; rotDir = encoderPos; break;
   }
 
   display.setCursor(65, selected);
@@ -723,11 +723,11 @@ void updateTimingDisplay(int& numHours, int& numMinutes, int& numSeconds, int& c
 
   int selected = 0;
   switch (dataInputNo) {
-    case 4: selected = 2; numHours = encoderPos;
-    case 5: selected = 12; numMinutes = encoderPos;
-    case 6: selected = 22; numSeconds = encoderPos;
-    case 7: selected = 32; countDown = encoderPos;
-    default: selected = 42; numLoops = encoderPos;
+    case 4: selected = 2; numHours = encoderPos;  break;
+    case 5: selected = 12; numMinutes = encoderPos;  break;
+    case 6: selected = 22; numSeconds = encoderPos;  break;
+    case 7: selected = 32; countDown = encoderPos;  break;
+    default: selected = 42; numLoops = encoderPos;  break;
   }
 
   display.setCursor(65, selected);
