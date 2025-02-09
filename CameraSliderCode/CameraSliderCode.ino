@@ -344,7 +344,14 @@ void runHomeSlider() {
   display.setCursor(35, 30);
   display.print(F("Homing Slider"));
   display.display();
-  travelDir = toggleDirection(travelDir, travDirPin);
+  if (travelDir == 0)  //Set motor travel direction and then flip direction for back off when reaching the end of the slider
+  {
+    digitalWrite(travDirPin, LOW);
+    travelDir = 1;
+  } else {
+    digitalWrite(travDirPin, HIGH);
+    travelDir = 0;
+  }
   moveMotor(25000, 380, travStepPin, travDirPin, leftLimitSwitch, rightLimitSwitch);
   displayEnd();
 }
@@ -377,9 +384,6 @@ void runPanAndRotate() {
         digitalWrite(rotDirPin, LOW);
         rotDir = 0;
       }
-
-      travelDir = toggleDirection(travelDir, travDirPin);
-      rotDir = toggleDirection(rotDir, rotDirPin);
 
       int travelPulses = calcTravelPulses();
       int rotationPulses = calcRotationPulses();
@@ -479,11 +483,6 @@ void setTiming() {
   inputField(minCountDown, minCountDown, maxCountDown, countDownInc);
   dataInputNo = 8;
   inputField(loopMin, loopMin, loopMax, loopInc);
-}
-
-int toggleDirection(int dir, int pin) {
-  digitalWrite(pin, dir ? HIGH : LOW);
-  return dir;
 }
 
 void moveMotor(int pulses, float interval, int stepPin, int dirPin, int limitSwitch1, int limitSwitch2) {
