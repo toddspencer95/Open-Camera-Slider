@@ -503,45 +503,45 @@ void moveMotor(int pulses, float interval, int stepPin, int dirPin, int limitSwi
 }
 
 void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch) {
-    // Ensure we don't divide by zero
-    int travelPerRotation = (rotationPulses != 0) ? travelPulses / rotationPulses : 0;
+  // Ensure we don't divide by zero
+  int travelPerRotation = (rotationPulses != 0) ? travelPulses / rotationPulses : 0;
 
-    // Handle case where both travel and rotation occur
-    if (travelPulses > 0 && rotationPulses > 0) {
-        for (int i = 1; i <= travelPulses; i++) {
-            if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
-                pulseMotor(travStepPin, interval);
-                if (i % travelPerRotation == 0) {
-                    pulseMotor(rotStepPin, interval);
-                }
-            } else {
-                displayLimitReached();
-                backOffMotor(travStepPin, travDirPin, interval);
-                break;
-            }
+  // Handle case where both travel and rotation occur
+  if (travelPulses > 0 && rotationPulses > 0) {
+    for (int i = 1; i <= travelPulses; i++) {
+      if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
+        pulseMotor(travStepPin, interval);
+        if (i % travelPerRotation == 0) {
+          pulseMotor(rotStepPin, interval);
         }
-    } 
-    // Handle exclusive Pan case (only travel, no rotation)
-    else if (travelPulses > 0) {
-        for (int i = 1; i <= travelPulses; i++) {
-            if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
-                pulseMotor(travStepPin, interval);
-            } else {
-                displayLimitReached();
-                backOffMotor(travStepPin, travDirPin, interval);
-                break;
-            }
-        }
-    } 
-    // Handle exclusive Rotate case (only rotation, no travel)
-    else if (rotationPulses > 0) {
-        for (int i = 1; i <= rotationPulses; i++) {
-            // Calculate the rotation pulse interval required to rotate in the required time
-            // Notice that this is different than pan travel interval
-            float rotatation_interval = calcRotInterval(rotationPulses);
-            pulseMotor(rotStepPin, rotatation_interval);
-        }
+      } else {
+        displayLimitReached();
+        backOffMotor(travStepPin, travDirPin, interval);
+        break;
+      }
     }
+  }
+  // Handle exclusive Pan case (only travel, no rotation)
+  else if (travelPulses > 0) {
+    for (int i = 1; i <= travelPulses; i++) {
+      if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
+        pulseMotor(travStepPin, interval);
+      } else {
+        displayLimitReached();
+        backOffMotor(travStepPin, travDirPin, interval);
+        break;
+      }
+    }
+  }
+  // Handle exclusive Rotate case (only rotation, no travel)
+  else if (rotationPulses > 0) {
+    // Calculate the rotation pulse interval required to rotate in the required time
+    // Notice that this is different than pan travel interval
+    float rotatation_interval = calcRotInterval(rotationPulses);
+    for (int i = 1; i <= rotationPulses; i++) {
+      pulseMotor(rotStepPin, rotatation_interval);
+    }
+  }
 }
 
 void pulseMotor(int pin, float interval) {
