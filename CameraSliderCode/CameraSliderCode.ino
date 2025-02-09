@@ -407,39 +407,45 @@ void runPointAToPointB() {
   setPointA();
   setTiming();
   displayStart();
+  travTime = numHours * 3600 + numMinutes * 60 + numSeconds;
 
-  for (int i = 1; i <= numLoops; i++) {
-    displayLoopInfo(i, F("Pnt A - Pnt B"));
-    
-    // Set motor travel direction
-    // We are flipping the direction, because the user sets the end point first, then start
-    if (travelDir == 0)
-    {
-      travelDir = 1;
-      digitalWrite(travDirPin, LOW);
-    } else {
-      travelDir = 0;
-      digitalWrite(travDirPin, HIGH);
+  if (travTime != 0) {
+    for (int i = 1; i <= numLoops; i++) {
+      displayLoopInfo(i, F("Pnt A - Pnt B"));
+
+      // Flip direction then set motor travel direction
+      // Since user sets end point first, then start
+      if (travelDir == 0)
+      {
+        travelDir = 1;
+        digitalWrite(travDirPin, LOW);
+      } else {
+        travelDir = 0;
+        digitalWrite(travDirPin, HIGH);
+      }
+      if (rotDir == 0)  //Set motor travel direction
+      {
+        rotDir = 1;
+        digitalWrite(rotDirPin, HIGH);
+      } else {
+        rotDir = 0;
+        digitalWrite(rotDirPin, LOW);
+      }
+
+      int travelPulses = calcTravelPulses();
+      int rotationPulses = calcRotationPulses();
+      float interval = calcInterval(travelPulses);
+
+      if (travelPulses != 0 && rotationPulses == 0) {
+        moveMotor(travelPulses, interval, travStepPin, travDirPin, leftLimitSwitch, rightLimitSwitch);
+      } else if (travelPulses == 0 && rotationPulses != 0) {
+        moveMotor(rotationPulses, interval, rotStepPin, rotDirPin);
+      } else {
+        movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
+      }
     }
-    if (rotDir == 0)  //Set motor travel direction
-    {
-      rotDir = 1;
-      digitalWrite(rotDirPin, HIGH);
-    } else {
-      rotDir = 0;
-      digitalWrite(rotDirPin, LOW);
-    }
-    
-    int travelPulses = calcTravelPulses();
-    int rotationPulses = calcRotationPulses();
-    float interval = calcInterval(travelPulses);
-    
-    movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
-  
   }
-  
   displayEnd();
-
 }
 
 void setPointB() {
