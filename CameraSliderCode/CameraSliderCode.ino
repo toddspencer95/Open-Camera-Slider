@@ -536,7 +536,10 @@ void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int 
     // Handle exclusive Rotate case (only rotation, no travel)
     else if (rotationPulses > 0) {
         for (int i = 1; i <= rotationPulses; i++) {
-            pulseMotor(rotStepPin, interval);
+            // Calculate the rotation pulse interval required to rotate in the required time
+            // Notice that this is different than pan travel interval
+            float rotatation_interval = calcRotInterval(rotationPulses);
+            pulseMotor(rotStepPin, rotatation_interval);
         }
     }
 }
