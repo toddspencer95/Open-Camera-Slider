@@ -600,9 +600,9 @@ void inputPanAndRotateData() {
   dataInputNo = 1;
   inputField(0, minTravDist, maxTravDist, travDistInc);
   dataInputNo = 2;
-  inputField(initialRotAng, minRotAng, maxRotAng, rotAngInc);
-  dataInputNo = 3;
   inputField(0, 0, 1, 1);
+  dataInputNo = 3;
+  inputField(initialRotAng, minRotAng, maxRotAng, rotAngInc);
 }
 
 void inputPointAData() {
@@ -679,30 +679,31 @@ void updateDistanceRotationDisplay() {
   display.setCursor(2, 12);
   display.print(F("Distance: "));
   display.setCursor(2, 22);
-  display.print(F("Rot. Ang: "));
-  display.setCursor(2, 32);
   display.print(F("Rot. Dir: "));
+  display.setCursor(2, 32);
+  display.print(F("Rot. Ang: "));
+  
 
   int selected = 0;
   switch (dataInputNo) {
     case 0: selected = 2; travelDir = encoderPos; break;
     case 1: selected = 12; travDist = encoderPos; break;
-    case 2: selected = 22; rotAngle = encoderPos; break;
-    default: selected = 32; rotDir = encoderPos; break;
+    case 2: selected = 22; rotDir = encoderPos; break;
+    default: selected = 32; rotAngle = encoderPos; break;
   }
 
   display.setCursor(65, selected);
   display.print(F(">"));
   display.setCursor(75, 2);
   display.print(travelDir == 0 ? F("Right") : F("Left"));
-  display.print(F("mm"));
   display.setCursor(75, 12);
   display.print(travDist);
+  display.print(F("mm"));
   display.setCursor(75, 22);
+  display.print(rotDir == 0 ? F("CCW") : F("CW"));
+  display.setCursor(75, 32);
   display.print(rotAngle);
   display.print(F("deg"));
-  display.setCursor(75, 32);
-  display.print(rotDir == 0 ? F("CCW") : F("CW"));
   display.display();
 }
 
