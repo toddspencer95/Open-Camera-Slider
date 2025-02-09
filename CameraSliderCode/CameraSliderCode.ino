@@ -397,7 +397,7 @@ void runPanAndRotate() {
       // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
         float rotation_interval = calcRotInterval(rotationPulses);
-        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin);
+        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       
       // This is for Pan and Rotate
       } else {
@@ -450,7 +450,7 @@ void runPointAToPointB() {
       // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
         float rotation_interval = calcRotInterval(rotationPulses);
-        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin);
+        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       
       // This is for Pan and Rotate
       } else {
