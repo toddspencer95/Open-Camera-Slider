@@ -389,10 +389,17 @@ void runPanAndRotate() {
       int rotationPulses = calcRotationPulses();
       float interval = calcInterval(travelPulses);
 
+      // This is for Pan Only
       if (travelPulses != 0 && rotationPulses == 0) {
         moveMotor(travelPulses, interval, travStepPin, travDirPin, leftLimitSwitch, rightLimitSwitch);
+      
+      // This is for Rotate Ony
+      // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
-        moveMotor(rotationPulses, interval, rotStepPin, rotDirPin);
+        float rotation_interval = calcRotInterval(rotationPulses);
+        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin);
+      
+      // This is for Pan and Rotate
       } else {
         movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       }
