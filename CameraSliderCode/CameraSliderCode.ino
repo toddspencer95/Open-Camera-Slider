@@ -671,7 +671,7 @@ void updateHomeSliderDisplay() {
 }
 
 // Consolidated function for distance/rotation display
-void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, int rotDir, int dataInputNo) {
+void updateDistanceRotationDisplay() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
@@ -684,8 +684,9 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
   display.print(F("Rot. Dir: "));
 
   int selected = 0;
+  int ptr;
   switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos; display.clearDisplay(); display.setCursor(2, 2); display.print(travDist); delay(2000); break;
+    case 0: selected = 2; travDist = encoderPos; break;
     case 1: selected = 12; travelDir = encoderPos; break;
     case 2: selected = 22; rotAngle = encoderPos; break;
     default: selected = 32; rotDir = encoderPos; break;
@@ -707,7 +708,7 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 }
 
 // Function to handle the timing display
-void updateTimingDisplay(int numHours, int numMinutes, int numSeconds, int countDown, int numLoops, int dataInputNo) {
+void updateTimingDisplay() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
@@ -750,11 +751,11 @@ void updateTimingDisplay(int numHours, int numMinutes, int numSeconds, int count
 void updatePanAndRotateDataDisplay() {
   // Display distance/rotation parameters if dataInputNo is 0 to 3
   if (dataInputNo <= 3) {
-    updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+    updateDistanceRotationDisplay();
   } 
   // Display timing parameters if dataInputNo is 4 or greater
   else {
-    updateTimingDisplay(numHours, numMinutes, numSeconds, countDown, numLoops, dataInputNo);
+    updateTimingDisplay();
   }
 }
 
@@ -762,10 +763,10 @@ void updatePanAndRotateDataDisplay() {
 void updatePointADataDisplay() {
   // Same logic as updatePanAndRotateDataDisplay
   if (dataInputNo <= 3) {
-    updateDistanceRotationDisplay(travDist, travelDir, rotAngle, rotDir, dataInputNo);
+    updateDistanceRotationDisplay();
   } 
   else {
-    updateTimingDisplay(numHours, numMinutes, numSeconds, countDown, numLoops, dataInputNo);
+    updateTimingDisplay();
   }
 }
 
