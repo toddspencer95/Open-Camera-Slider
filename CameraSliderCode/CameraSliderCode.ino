@@ -359,6 +359,25 @@ void runPanAndRotate() {
     for (int i = 1; i <= numLoops; i++) {
       displayLoopInfo(i, F("Pan & Rotate"));
 
+      // Set motor travel direction
+      // Then flip for next loop
+      if (travelDir == 0)
+      {
+        digitalWrite(travDirPin, LOW);
+        travelDir = 1;
+      } else {
+        digitalWrite(travDirPin, HIGH);
+        travelDir = 0;
+      }
+      if (rotDir == 0)  //Set motor travel direction
+      {
+        digitalWrite(rotDirPin, HIGH);
+        rotDir = 1;
+      } else {
+        digitalWrite(rotDirPin, LOW);
+        rotDir = 0;
+      }
+
       travelDir = toggleDirection(travelDir, travDirPin);
       rotDir = toggleDirection(rotDir, rotDirPin);
 
@@ -379,13 +398,11 @@ void runPanAndRotate() {
 }
 
 void runPointAToPointB() {
+  
   setPointB();
   setPointA();
   setTiming();
   displayStart();
-  int travelPulses = calcTravelPulses();
-  int rotationPulses = calcRotationPulses();
-  float interval = calcInterval(travelPulses);
 
   for (int i = 1; i <= numLoops; i++) {
     displayLoopInfo(i, F("Pnt A - Pnt B"));
@@ -408,9 +425,17 @@ void runPointAToPointB() {
       rotDir = 0;
       digitalWrite(rotDirPin, LOW);
     }
+    
+    int travelPulses = calcTravelPulses();
+    int rotationPulses = calcRotationPulses();
+    float interval = calcInterval(travelPulses);
+    
     movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
+  
   }
+  
   displayEnd();
+
 }
 
 void setPointB() {
