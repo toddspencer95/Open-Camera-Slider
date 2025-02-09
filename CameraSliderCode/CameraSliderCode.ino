@@ -388,7 +388,26 @@ void runPointAToPointB() {
   float interval = calcInterval(travelPulses);
 
   for (int i = 1; i <= numLoops; i++) {
-    displayLoopInfo(i, F("Point A - Point B"));
+    displayLoopInfo(i, F("Pnt A - Pnt B"));
+    
+    // Set motor travel direction
+    // We are flipping the direction, because the user sets the end point first, then start
+    if (travelDir == 0)
+    {
+      travelDir = 1;
+      digitalWrite(travDirPin, LOW);
+    } else {
+      travelDir = 0;
+      digitalWrite(travDirPin, HIGH);
+    }
+    if (rotDir == 0)  //Set motor travel direction
+    {
+      rotDir = 1;
+      digitalWrite(rotDirPin, HIGH);
+    } else {
+      rotDir = 0;
+      digitalWrite(rotDirPin, LOW);
+    }
     movePanAndRotate(travelPulses, rotationPulses, interval, travStepPin, rotStepPin, travDirPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
   }
   displayEnd();
@@ -776,27 +795,6 @@ int calcTravelPulses() {
 
 int calcRotationPulses() {
   return rotAngle * pulsesPerDeg;
-}
-
-boolean checkRot(int i) {
-  boolean rotP = false;
-  float deltaAngle = 0;
-  if (((travDist / 2) - (i / pulsesPerMM)) > 0) {
-    if (currentAngle < 90 - (1 / pulsesPerDeg)) {
-      float newAngle = atan((objDist) / ((travDist / 2) - (i / pulsesPerMM))) * 180 / M_PI;
-      deltaAngle = newAngle - currentAngle;
-    }
-  } else if (((travDist / 2) - (i / pulsesPerMM)) < 0) {
-    if (currentAngle > 0) {
-      float newAngle = atan((objDist) / ((i / pulsesPerMM) - (travDist / 2))) * 180 / M_PI;
-      deltaAngle = currentAngle - newAngle;
-    }
-  }
-  if (deltaAngle >= (1 / pulsesPerDeg)) {
-    rotP = true;
-    currentAngle += (travDist / 2) - (i / pulsesPerMM) > 0 ? (1 / pulsesPerDeg) : -(1 / pulsesPerDeg);
-  }
-  return rotP;
 }
 
 float calcInterval(int numPulses) {
