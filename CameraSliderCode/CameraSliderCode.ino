@@ -685,7 +685,7 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 
   int selected = 0;
   switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos; break;
+    case 0: selected = 2; travDist = encoderPos; display.clearDisplay(); display.setCursor(2, 2); display.print(travDist); delay(2000); break;
     case 1: selected = 12; travelDir = encoderPos; break;
     case 2: selected = 22; rotAngle = encoderPos; break;
     default: selected = 32; rotDir = encoderPos; break;
@@ -707,7 +707,7 @@ void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, in
 }
 
 // Function to handle the timing display
-void updateTimingDisplay(int& numHours, int& numMinutes, int& numSeconds, int& countDown, int& numLoops, int dataInputNo) {
+void updateTimingDisplay(int numHours, int numMinutes, int numSeconds, int countDown, int numLoops, int dataInputNo) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
