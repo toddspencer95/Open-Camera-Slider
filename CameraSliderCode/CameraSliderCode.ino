@@ -596,9 +596,9 @@ void inputHomeSliderData() {
 
 void inputPanAndRotateData() {
   dataInputNo = 0;
-  inputField(0, minTravDist, maxTravDist, travDistInc);
-  dataInputNo = 1;
   inputField(0, 0, 1, 1);
+  dataInputNo = 1;
+  inputField(0, minTravDist, maxTravDist, travDistInc);
   dataInputNo = 2;
   inputField(initialRotAng, minRotAng, maxRotAng, rotAngInc);
   dataInputNo = 3;
@@ -675,19 +675,18 @@ void updateDistanceRotationDisplay() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
-  display.print(F("Distance: "));
-  display.setCursor(2, 12);
   display.print(F("Trav. Dir: "));
+  display.setCursor(2, 12);
+  display.print(F("Distance: "));
   display.setCursor(2, 22);
   display.print(F("Rot. Ang: "));
   display.setCursor(2, 32);
   display.print(F("Rot. Dir: "));
 
   int selected = 0;
-  int ptr;
   switch (dataInputNo) {
-    case 0: selected = 2; travDist = encoderPos; break;
-    case 1: selected = 12; travelDir = encoderPos; break;
+    case 0: selected = 2; travelDir = encoderPos; break;
+    case 1: selected = 12; travDist = encoderPos; break;
     case 2: selected = 22; rotAngle = encoderPos; break;
     default: selected = 32; rotDir = encoderPos; break;
   }
@@ -695,10 +694,10 @@ void updateDistanceRotationDisplay() {
   display.setCursor(65, selected);
   display.print(F(">"));
   display.setCursor(75, 2);
-  display.print(travDist);
+  display.print(travelDir == 0 ? F("Right") : F("Left"));
   display.print(F("mm"));
   display.setCursor(75, 12);
-  display.print(travelDir == 0 ? F("Right") : F("Left"));
+  display.print(travDist);
   display.setCursor(75, 22);
   display.print(rotAngle);
   display.print(F("deg"));
