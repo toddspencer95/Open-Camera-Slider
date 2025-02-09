@@ -202,7 +202,7 @@ void moveToPosition();
 void setup() {
   Serial.begin(9600);
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
+    //Serial.println(F("SSD1306 allocation failed"));
     for (;;);
   }
 
@@ -211,7 +211,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(pinA), PinA, RISING);
   attachInterrupt(digitalPinToInterrupt(pinB), PinB, RISING);
   displayLogo();
-  Serial.println("Setup complete");
+  //Serial.println("Setup complete");
 }
 
 void loop() {
@@ -264,11 +264,11 @@ void selectMode() {
         if (buttonState == LOW) {
           modeSelected = encoderPos;
           pressed = true;
-          Serial.println("Button Pushed");
+          //Serial.println("Button Pushed");
         } else {
           if (pressed) {
             confirmed = true;
-            Serial.println("Mode confirmed");
+            //Serial.println("Mode confirmed");
           }
         }
       }
@@ -278,7 +278,7 @@ void selectMode() {
       prevEncoderPos = encoderPos;
     }
   }
-  Serial.println("Mode selected");
+  //Serial.println("Mode selected");
 }
 
 void executeMode() {
@@ -636,7 +636,7 @@ void inputField(int initialSetting, int lowerLimit, int upperLimit, int incremen
         } else {
           if (pressed) {
             confirmed = true;
-            Serial.println("Input Confirmed");
+            //Serial.println("Input Confirmed");
           }
         }
       }
@@ -674,7 +674,7 @@ void updateHomeSliderDisplay() {
 bool isConfirmed = false;
 
 // Consolidated function for distance/rotation display
-void updateDistanceRotationDisplay(int& travDist, int& travelDir, int& rotAngle, int& rotDir, int dataInputNo) {
+void updateDistanceRotationDisplay(int travDist, int travelDir, int rotAngle, int rotDir, int dataInputNo) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 2);
