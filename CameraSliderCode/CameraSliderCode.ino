@@ -517,26 +517,33 @@ void moveMotor(int pulses, float interval, int stepPin, int dirPin, int limitSwi
 }
 
 void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch) {
-    // Ensure we don't divide by zero and handle edge cases
-    int travelPerRotation = (rotationPulses != 0) ? max(1, travelPulses / rotationPulses) : travelPulses;
-
-    for (int i = 1; i <= travelPulses; i++) {
-        if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
-            pulseMotor(travStepPin, interval);
-
-            // Check if a rotation step must be made
-            if (i % travelPerRotation == 0) {
-                digitalWrite(rotStepPin, HIGH);
-                delayMicroseconds(interval / 2);
-                digitalWrite(rotStepPin, LOW);
-                delayMicroseconds(interval / 2);
-            }
-        } else {
-            displayLimitReached();
-            backOffMotor(travStepPin, travDirPin, interval);
-            break;
-        }
+  //Calculate how much the camera should pan for each rotation step
+  int travelPerRotation = travelPulses / rotationPulses;
+  for (int i = 1; i <= travelPulses; i++) {
+    if (digitalRead(leftLimitSwitch) == true && digitalRead(rightLimitSwitch) == true) {  //limit switches not reached
+      digitalWrite(travStepPin, HIGH);
+      int checkRotate = i % travelPerRotation;  //Check if a rotation step must be made
+      if (checkRotate == 0)
+        digitalWrite(rotStepPin, HIGH);
+      if (travTime > 330) {
+        delay(interval / 2);
+      } else {
+        delayMicroseconds(interval / 2);
+      }
+      digitalWrite(travStepPin, LOW);
+      if (checkRotate == 0)
+        digitalWrite(rotStepPin, LOW);
+      if (travTime > 330) {
+        delay(interval / 2);
+      } else {
+        delayMicroseconds(interval / 2);
+      }
+    } else {
+      displayLimitReached();
+      backOffMotor(travStepPin, travDirPin, interval);
+      break;
     }
+  }
 }
 
 
