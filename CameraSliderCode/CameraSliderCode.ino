@@ -520,29 +520,15 @@ void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int 
   //Calculate how much the camera should pan for each rotation step
   int travelPerRotation = travelPulses / rotationPulses;
   for (int i = 1; i <= travelPulses; i++) {
-    if (digitalRead(leftLimitSwitch) == true && digitalRead(rightLimitSwitch) == true) {  //limit switches not reached
-      digitalWrite(travStepPin, HIGH);
-      int checkRotate = i % travelPerRotation;  //Check if a rotation step must be made
-      if (checkRotate == 0)
-        digitalWrite(rotStepPin, HIGH);
-      if (travTime > 330) {
-        delay(interval / 2);
-      } else {
-        delayMicroseconds(interval / 2);
-      }
-      digitalWrite(travStepPin, LOW);
-      if (checkRotate == 0)
-        digitalWrite(rotStepPin, LOW);
-      if (travTime > 330) {
-        delay(interval / 2);
-      } else {
-        delayMicroseconds(interval / 2);
-      }
-    } else {
-      displayLimitReached();
-      backOffMotor(travStepPin, travDirPin, interval);
-      break;
-    }
+    digitalWrite(travStepPin, HIGH);
+    int checkRotate = i % travelPerRotation;  //Check if a rotation step must be made
+    if (checkRotate == 0)
+      digitalWrite(rotStepPin, HIGH);
+    delayMicroseconds(interval / 2);
+    digitalWrite(travStepPin, LOW);
+    if (checkRotate == 0)
+      digitalWrite(rotStepPin, LOW);
+    delayMicroseconds(interval / 2);
   }
 }
 
