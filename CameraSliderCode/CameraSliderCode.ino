@@ -397,7 +397,7 @@ void runPanAndRotate() {
       // This is for Rotate Ony
       // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
-        moveMotor(rotationPulses, interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
+        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       
       // This is for Pan and Rotate
       } else {
@@ -450,7 +450,7 @@ void runPointAToPointB() {
       // This is for Rotate Ony
       // Notice that rotation interval is different from travel interval
       } else if (travelPulses == 0 && rotationPulses != 0) {
-        moveMotor(rotationPulses, interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
+        moveMotor(rotationPulses, rotation_interval, rotStepPin, rotDirPin, leftLimitSwitch, rightLimitSwitch);
       
       // This is for Pan and Rotate
       } else {
@@ -536,9 +536,17 @@ void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int 
 
 void pulseMotor(int pin, float interval) {
   digitalWrite(pin, HIGH);
-  delayMicroseconds(interval / 2);
+  if (interval > 330 * 1000) {  // If interval is large, use normal delay
+    delay(interval / 2);
+  } else {
+    delayMicroseconds(interval / 2);
+  }
   digitalWrite(pin, LOW);
-  delayMicroseconds(interval / 2);
+  if (interval > 330 * 1000) {
+    delay(interval / 2);
+  } else {
+    delayMicroseconds(interval / 2);
+  }
 }
 
 void displayLimitReached() {
