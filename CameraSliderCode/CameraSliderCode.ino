@@ -517,8 +517,8 @@ void moveMotor(int pulses, float interval, int stepPin, int dirPin, int limitSwi
 }
 
 void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int travStepPin, int rotStepPin, int travDirPin, int rotDirPin, int leftLimitSwitch, int rightLimitSwitch) {
-  // Ensure we don't divide by zero
-  int travelPerRotation = (rotationPulses != 0) ? travelPulses / rotationPulses : 0;
+  // Ensure we don't divide by zero and handle edge cases
+  int travelPerRotation = (rotationPulses != 0) ? max(1, travelPulses / rotationPulses) : travelPulses;
 
   for (int i = 1; i <= travelPulses; i++) {
     if (digitalRead(leftLimitSwitch) && digitalRead(rightLimitSwitch)) {
