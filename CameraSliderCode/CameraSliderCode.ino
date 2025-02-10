@@ -388,7 +388,7 @@ void runPanAndRotate() {
       int travelPulses = calcTravelPulses();
       int rotationPulses = calcRotationPulses();
       float interval = calcInterval(travelPulses);
-      float rotation_interval = calcRotInterval(rotationPulses);
+      float rotation_interval = calcInterval(rotationPulses);
 
       // This is for Pan Only
       if (travelPulses != 0 && rotationPulses == 0) {
@@ -441,7 +441,7 @@ void runPointAToPointB() {
       int travelPulses = calcTravelPulses();
       int rotationPulses = calcRotationPulses();
       float interval = calcInterval(travelPulses);
-      float rotation_interval = calcRotInterval(rotationPulses);
+      float rotation_interval = calcInterval(rotationPulses);
 
       // This is for Pan Only
       if (travelPulses != 0 && rotationPulses == 0) {
@@ -870,10 +870,6 @@ int calcRotationPulses() {
 
 // TODO: Deconflict these
 float calcInterval(int numPulses) {
-  return travTime > 330 ? (travTime * 1000 / numPulses) : (travTime * 1000000 / numPulses);
-}
-
-float calcRotInterval(int numPulses) {
   return travTime > 330 ? (travTime * 1000 / numPulses) : (travTime * 1000000 / numPulses);
 }
 
