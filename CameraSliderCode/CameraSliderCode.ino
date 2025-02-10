@@ -536,17 +536,9 @@ void movePanAndRotate(int travelPulses, int rotationPulses, float interval, int 
 
 void pulseMotor(int pin, float interval) {
   digitalWrite(pin, HIGH);
-  if (interval > 330 * 1000) {  // If interval is large, use normal delay
-    delay(interval / 2);
-  } else {
-    delayMicroseconds(interval / 2);
-  }
+  delayMicroseconds(interval / 2);
   digitalWrite(pin, LOW);
-  if (interval > 330 * 1000) {
-    delay(interval / 2);
-  } else {
-    delayMicroseconds(interval / 2);
-  }
+  delayMicroseconds(interval / 2);
 }
 
 void displayLimitReached() {
@@ -876,14 +868,16 @@ int calcRotationPulses() {
   return rotAngle * pulsesPerDeg;
 }
 
+// TODO: Deconflict these
 float calcInterval(int numPulses) {
   return travTime > 330 ? (travTime * 1000 / numPulses) : (travTime * 1000000 / numPulses);
 }
 
 float calcRotInterval(int numPulses) {
-  return travTime * 1000 / numPulses;
+  return travTime > 330 ? (travTime * 1000 / numPulses) : (travTime * 1000000 / numPulses);
 }
 
+// TODO: Add flag so this isn't always moving slider in the background
 void moveToPosition() {
   int pulses;
   float interval = 1000000.0 / defaultSpeed;  // Default speed in pulses per second
