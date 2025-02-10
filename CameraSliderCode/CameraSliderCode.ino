@@ -868,9 +868,18 @@ int calcRotationPulses() {
   return rotAngle * pulsesPerDeg;
 }
 
-// TODO: Deconflict these
-float calcInterval(int numPulses) {
-  return travTime > 330 ? (travTime * 1000 / numPulses) : (travTime * 1000000 / numPulses);
+float calcInterval(int numPulses) {  //Calculate the interval required between pulses to achieve duration
+
+  // NOTE:
+  // Experimentally found that delay function works best for times greater than 330 seconds and microdelay works better for times less than 330 seconds
+  // THIS WILL CHANGE WITH TRACK LENGTH
+  float inter = 0.0;
+  if (travTime > 330) {
+    inter = travTime * 1000 / numPulses;
+  } else {
+    inter = travTime * 1000000 / numPulses;
+  }
+  return inter;
 }
 
 // TODO: Add flag so this isn't always moving slider in the background
